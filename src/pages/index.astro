@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import ExperimentStatus from '../components/ExperimentStatus.astro';
+import { projects } from '../data/projects';
+import { withBase } from '../utils/paths';
+---
+<Base title="Research projects" description="Research results, evidence, caveats, and ongoing experiments.">
+  <div class="shell landing">
+    <p class="section-kicker">Research archive</p>
+    <h1>Research projects</h1>
+    <p class="landing-intro">A clear record of results, visual evidence, limitations, and questions still under test.</p>
+    <section id="projects" class="landing-projects" aria-labelledby="projects-title">
+      <div class="section-heading"><h2 id="projects-title">Projects</h2><span>{projects.length} {projects.length === 1 ? 'subject' : 'subjects'}</span></div>
+      {projects.length > 0 ? <div class="project-list">{projects.map((project) =>
+        <a class="project-row" href={withBase(`projects/${project.slug}/`)}>
+          <div><span class="project-category">{project.category}</span><h3>{project.title}</h3><p>{project.contribution}</p></div>
+          <ExperimentStatus status={project.status} />
+        </a>
+      )}</div> : <p class="empty-note">The first subject will appear here once its source report is confirmed.</p>}
+    </section>
+  </div>
+</Base>

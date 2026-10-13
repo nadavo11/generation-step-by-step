@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import ExperimentStatus from '../../components/ExperimentStatus.astro';
+import MetricTable from '../../components/MetricTable.astro';
+import QualitativeSamples from '../../components/QualitativeSamples.astro';
+import ClaimEvidence from '../../components/ClaimEvidence.astro';
+import Caveats from '../../components/Caveats.astro';
+import NextExperiments from '../../components/NextExperiments.astro';
+import { projects } from '../../data/projects';
+import type { Project } from '../../types';
+import { withBase } from '../../utils/paths';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+
+interface Props { project: Project; }
+const { project } = Astro.props;
+---
+<Base title={`${project.title} | Research projects`} description={project.contribution}>
+  <article>
+    <header class="project-hero shell">
+      <a class="back-link" href={withBase('')}>All projects</a>
+      <div class="hero-topline"><span>{project.category}</span><ExperimentStatus status={project.status} /></div>
+      <h1>{project.title}</h1>
+      <p class="contribution">{project.contribution}</p>
+      <div class="verdict"><span>Current verdict</span><strong>{project.verdict}</strong></div>
+    </header>
+
+    {project.metrics.length > 0 && <section class="metric-band" aria-label="Headline metrics"><div class="shell metric-grid">{project.metrics.map((metric) =>
+      <div class="metric"><strong>{metric.value}</strong><span>{metric.label}</span><p>{metric.context}</p></div>
+    )}</div></section>}
+
+    <div class="shell body-grid">
+      <aside class="section-nav" aria-label="On this page"><p>On this page</p><a href="#question">Question</a><a href="#results">Results</a><a href="#qualitative">Qualitative evidence</a><a href="#limitations">Limitations</a><a href="#next">Next experiments</a></aside>
+      <div class="article-flow">
+        <section id="question" class="content-section"><h2>Research question</h2><p class="lead">{project.question}</p><div class="two-column"><div><h3>Why this matters</h3><p>{project.motivation}</p></div><div><h3>Experimental setup</h3><p>{project.setup}</p></div></div></section>
+        <section id="results" class="content-section"><div class="section-title"><h2>Primary comparison</h2><ExperimentStatus status="completed" /></div><MetricTable rows={project.results} /><p class="interpretation">{project.interpretation}</p></section>
+        {project.relatedMethods.length > 0 && <section class="content-section"><div class="section-title"><h2>Related streaming methods</h2><ExperimentStatus status="reported" /></div><p class="table-intro">ImageNet-256 figures below are cited from papers and official checkpoint descriptions. They were not re-measured or evaluated under one controlled protocol in this audit.</p><MetricTable rows={project.relatedMethods} /></section>}
+        {project.claims.length > 0 && <section class="content-section"><h2>Claims and evidence</h2><ClaimEvidence claims={project.claims} /></section>}
+        <section id="qualitative" class="content-section"><h2>Qualitative evidence</h2><QualitativeSamples findings={project.qualitative} figures={project.figures} /></section>
+        <section id="limitations" class="content-section caveat-section"><h2>Caveats and failure cases</h2><Caveats items={project.caveats} /></section>
+        <section id="next" class="content-section"><div class="section-title"><h2>What remains to be tested</h2><ExperimentStatus status="proposed" /></div><NextExperiments items={project.nextExperiments} /></section>
+        <p class="source-note">{project.sourceNote} <a href={withBase('report/')}>Read the complete report with all checkpoint strips and frequency plots</a>.</p>
+      </div>
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,11 @@
+---
+import type { ResultRow } from '../types';
+interface Props { rows: ResultRow[]; }
+const { rows } = Astro.props;
+---
+<div class="table-scroll" role="region" aria-label="Results table" tabindex="0">
+  <table class="results-table">
+    <thead><tr><th scope="col">Comparison</th><th scope="col">Setting</th><th scope="col">Result</th><th scope="col">Reading</th></tr></thead>
+    <tbody>{rows.map((row) => <tr><th scope="row">{row.comparison}</th><td>{row.setting}</td><td class="numeric">{row.result}</td><td>{row.interpretation ?? '—'}</td></tr>)}</tbody>
+  </table>
+</div>

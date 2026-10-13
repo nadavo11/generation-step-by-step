@@ -1,0 +1,5 @@
+---
+interface Props { items: string[]; }
+const { items } = Astro.props;
+---
+<ol class="next-list">{items.map((item) => <li>{item}</li>)}</ol>

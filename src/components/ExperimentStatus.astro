@@ -1,0 +1,7 @@
+---
+import type { EvidenceStatus } from '../types';
+interface Props { status: EvidenceStatus; text?: string; }
+const { status, text } = Astro.props;
+const labels = { completed: 'Completed evidence', ongoing: 'Ongoing experiment', reported: 'Reported result', proposed: 'Not yet tested' };
+---
+<span class:list={['status', `status-${status}`]}>{text ?? labels[status]}</span>

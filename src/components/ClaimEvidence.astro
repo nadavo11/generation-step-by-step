@@ -1,0 +1,7 @@
+---
+import type { Claim } from '../types';
+import ExperimentStatus from './ExperimentStatus.astro';
+interface Props { claims: Claim[]; }
+const { claims } = Astro.props;
+---
+<div class="claim-list">{claims.map((claim) => <article class="claim"><ExperimentStatus status={claim.status} /><h3>{claim.text}</h3><p>{claim.evidence}</p></article>)}</div>

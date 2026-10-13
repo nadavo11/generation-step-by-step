@@ -1,0 +1,10 @@
+---
+import type { FigureData } from '../types';
+import { withBase } from '../utils/paths';
+interface Props { figure: FigureData; }
+const { figure } = Astro.props;
+---
+<figure class="research-figure">
+  <a href={withBase(figure.src)} target="_blank" rel="noopener"><img src={withBase(figure.src)} alt={figure.alt} loading="lazy" /></a>
+  <figcaption>{figure.caption}{figure.credit && <span class="figure-credit">{figure.credit}</span>}</figcaption>
+</figure>

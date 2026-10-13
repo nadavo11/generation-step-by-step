@@ -1,0 +1,10 @@
+---
+import type { FigureData } from '../types';
+import Figure from './Figure.astro';
+interface Props { findings: string[]; figures: FigureData[]; }
+const { findings, figures } = Astro.props;
+---
+<div class="qualitative-layout">
+  <ul class="finding-list">{findings.map((finding) => <li>{finding}</li>)}</ul>
+  {figures.length > 0 && <div class="figure-stack">{figures.map((figure) => <Figure figure={figure} />)}</div>}
+</div>
