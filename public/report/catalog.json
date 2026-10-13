@@ -1,0 +1,1370 @@
+[
+  {
+    "key": "dar_xl",
+    "label": "D-AR · ImageNet-256",
+    "meta": "Official XL · 775M · 2.09 · 775M measured params · 8 class-conditional samples · seed 0",
+    "method": "Comparator",
+    "files": {
+      "preview": "img/dar_xl_preview.jpg",
+      "final": "img/dar_xl_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "1",
+        "detail": "1"
+      },
+      {
+        "step": "2",
+        "detail": "2"
+      },
+      {
+        "step": "3",
+        "detail": "3"
+      },
+      {
+        "step": "4",
+        "detail": "4"
+      },
+      {
+        "step": "5",
+        "detail": "5"
+      },
+      {
+        "step": "6",
+        "detail": "6"
+      },
+      {
+        "step": "7",
+        "detail": "7"
+      },
+      {
+        "step": "8",
+        "detail": "8"
+      }
+    ],
+    "width": 1024,
+    "height": 1024,
+    "note": "Columns: denoising state. Rows use the same ImageNet label indices as FAR."
+  },
+  {
+    "key": "flexvar_d24",
+    "label": "FlexVAR · ImageNet-256",
+    "meta": "Official d24 · 1B · 2.21 at 10 stages · 1041M measured params · 8 class-conditional samples · seed 0",
+    "method": "Comparator",
+    "files": {
+      "preview": "img/flexvar_d24_preview.jpg",
+      "final": "img/flexvar_d24_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "1",
+        "detail": "1"
+      },
+      {
+        "step": "2",
+        "detail": "2"
+      },
+      {
+        "step": "3",
+        "detail": "3"
+      },
+      {
+        "step": "4",
+        "detail": "4"
+      },
+      {
+        "step": "5",
+        "detail": "5"
+      },
+      {
+        "step": "6",
+        "detail": "6"
+      },
+      {
+        "step": "7",
+        "detail": "7"
+      },
+      {
+        "step": "8",
+        "detail": "8"
+      },
+      {
+        "step": "9",
+        "detail": "9"
+      },
+      {
+        "step": "10",
+        "detail": "10"
+      },
+      {
+        "step": "11",
+        "detail": "12"
+      },
+      {
+        "step": "12",
+        "detail": "14"
+      },
+      {
+        "step": "13",
+        "detail": "16"
+      }
+    ],
+    "width": 1664,
+    "height": 1024,
+    "note": "Columns: scale in latent patches. Rows use the same ImageNet label indices as FAR."
+  },
+  {
+    "key": "var_d30",
+    "label": "VAR · ImageNet-256",
+    "meta": "Official d30 · 2B · 1.97 (1.80 re-eval) · 2010M measured params · 8 class-conditional samples · seed 0",
+    "method": "Comparator",
+    "files": {
+      "preview": "img/var_d30_preview.jpg",
+      "final": "img/var_d30_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "1",
+        "detail": "1"
+      },
+      {
+        "step": "2",
+        "detail": "2"
+      },
+      {
+        "step": "3",
+        "detail": "3"
+      },
+      {
+        "step": "4",
+        "detail": "4"
+      },
+      {
+        "step": "5",
+        "detail": "5"
+      },
+      {
+        "step": "6",
+        "detail": "6"
+      },
+      {
+        "step": "7",
+        "detail": "8"
+      },
+      {
+        "step": "8",
+        "detail": "10"
+      },
+      {
+        "step": "9",
+        "detail": "13"
+      },
+      {
+        "step": "10",
+        "detail": "16"
+      }
+    ],
+    "width": 1280,
+    "height": 1024,
+    "note": "Columns: scale in latent patches. Rows use the same ImageNet label indices as FAR."
+  },
+  {
+    "key": "detailflow",
+    "label": "DetailFlow · ImageNet-256",
+    "meta": "Official 16-GPT-L · 2.96 · 326M measured params · 8 class-conditional samples · seed 0",
+    "method": "Comparator",
+    "files": {
+      "preview": "img/detailflow_preview.jpg",
+      "final": "img/detailflow_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "1",
+        "detail": "8"
+      },
+      {
+        "step": "2",
+        "detail": "16"
+      },
+      {
+        "step": "3",
+        "detail": "24"
+      },
+      {
+        "step": "4",
+        "detail": "32"
+      },
+      {
+        "step": "5",
+        "detail": "40"
+      },
+      {
+        "step": "6",
+        "detail": "48"
+      },
+      {
+        "step": "7",
+        "detail": "56"
+      },
+      {
+        "step": "8",
+        "detail": "64"
+      },
+      {
+        "step": "9",
+        "detail": "72"
+      },
+      {
+        "step": "10",
+        "detail": "80"
+      },
+      {
+        "step": "11",
+        "detail": "88"
+      },
+      {
+        "step": "12",
+        "detail": "96"
+      },
+      {
+        "step": "13",
+        "detail": "104"
+      },
+      {
+        "step": "14",
+        "detail": "112"
+      },
+      {
+        "step": "15",
+        "detail": "120"
+      },
+      {
+        "step": "16",
+        "detail": "128"
+      }
+    ],
+    "width": 2048,
+    "height": 1024,
+    "note": "Columns: generated tokens. Rows use the same ImageNet label indices as FAR."
+  },
+  {
+    "key": "cifar10_small",
+    "label": "CIFAR-10-32 small",
+    "meta": "DCTdiff · 44.2M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 6.51",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/cifar10_small_x0.jpg",
+      "xt": "img/cifar10_small_xt.jpg",
+      "final": "img/cifar10_small_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 832,
+    "height": 512,
+    "note": ""
+  },
+  {
+    "key": "cifar10_mid",
+    "label": "CIFAR-10-32 mid",
+    "meta": "DCTdiff · 130.0M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 5.02",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/cifar10_mid_x0.jpg",
+      "xt": "img/cifar10_mid_xt.jpg",
+      "final": "img/cifar10_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 832,
+    "height": 512,
+    "note": ""
+  },
+  {
+    "key": "cifar10_mid_deep",
+    "label": "CIFAR-10-32 mid-deep",
+    "meta": "DCTdiff · 160.7M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 4.25",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/cifar10_mid_deep_x0.jpg",
+      "xt": "img/cifar10_mid_deep_xt.jpg",
+      "final": "img/cifar10_mid_deep_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 832,
+    "height": 512,
+    "note": ""
+  },
+  {
+    "key": "celeba64_small_ddim",
+    "label": "CelebA-64 small · ddim",
+    "meta": "DCTdiff · 44.3M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 1.91",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/celeba64_small_ddim_x0.jpg",
+      "xt": "img/celeba64_small_ddim_xt.jpg",
+      "final": "img/celeba64_small_ddim_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1248,
+    "height": 768,
+    "note": ""
+  },
+  {
+    "key": "celeba64_small_DPMSolver",
+    "label": "CelebA-64 small · DPM-Solver",
+    "meta": "DCTdiff · 44.3M params · DPM-Solver-fast, 100 NFE · published FID-50k 1.71",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/celeba64_small_DPMSolver_x0.jpg",
+      "xt": "img/celeba64_small_DPMSolver_xt.jpg",
+      "final": "img/celeba64_small_DPMSolver_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.15"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 6e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1248,
+    "height": 768,
+    "note": ""
+  },
+  {
+    "key": "imgnet64_small",
+    "label": "ImageNet-64 small",
+    "meta": "DCTdiff · 44.8M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 8.69",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/imgnet64_small_x0.jpg",
+      "xt": "img/imgnet64_small_xt.jpg",
+      "final": "img/imgnet64_small_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1248,
+    "height": 768,
+    "note": "Rows use label indices 207, 360, 387, 974, 88, 979, 417, 279. DCTdiff builds its ImageNet-64 label map from an unsorted os.listdir of the authors' training folder, so these are not the standard ImageNet classes and the mapping was not released. Each column shares one label."
+  },
+  {
+    "key": "imgnet64_mid",
+    "label": "ImageNet-64 mid",
+    "meta": "DCTdiff · 130.9M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 4.67",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/imgnet64_mid_x0.jpg",
+      "xt": "img/imgnet64_mid_xt.jpg",
+      "final": "img/imgnet64_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1248,
+    "height": 768,
+    "note": "Rows use label indices 207, 360, 387, 974, 88, 979, 417, 279. DCTdiff builds its ImageNet-64 label map from an unsorted os.listdir of the authors' training folder, so these are not the standard ImageNet classes and the mapping was not released. Each column shares one label."
+  },
+  {
+    "key": "imgnet64_mid_deep",
+    "label": "ImageNet-64 mid-deep",
+    "meta": "DCTdiff · 146.3M params · Euler ODE (DDIM-equiv.), 100 NFE · published FID-50k 4.30",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/imgnet64_mid_deep_x0.jpg",
+      "xt": "img/imgnet64_mid_deep_xt.jpg",
+      "final": "img/imgnet64_mid_deep_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.91"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.82"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.73"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.64"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.55"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.46"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.36"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.27"
+      },
+      {
+        "step": "#82",
+        "detail": "t 0.18"
+      },
+      {
+        "step": "#91",
+        "detail": "t 0.09"
+      },
+      {
+        "step": "#100",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1248,
+    "height": 768,
+    "note": "Rows use label indices 207, 360, 387, 974, 88, 979, 417, 279. DCTdiff builds its ImageNet-64 label map from an unsorted os.listdir of the authors' training folder, so these are not the standard ImageNet classes and the mapping was not released. Each column shares one label."
+  },
+  {
+    "key": "ffhq128_small",
+    "label": "FFHQ-128 small",
+    "meta": "DCTdiff · 44.3M params · DPM-Solver-fast, 100 NFE · published FID-50k 6.25",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/ffhq128_small_x0.jpg",
+      "xt": "img/ffhq128_small_xt.jpg",
+      "final": "img/ffhq128_small_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.15"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1664,
+    "height": 1024,
+    "note": ""
+  },
+  {
+    "key": "ffhq128_mid",
+    "label": "FFHQ-128 mid",
+    "meta": "DCTdiff · 130.2M params · DPM-Solver-fast, 100 NFE · published FID-50k 5.13",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/ffhq128_mid_x0.jpg",
+      "xt": "img/ffhq128_mid_xt.jpg",
+      "final": "img/ffhq128_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.15"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1664,
+    "height": 1024,
+    "note": ""
+  },
+  {
+    "key": "ffhq128_mid_deep",
+    "label": "FFHQ-128 mid-deep",
+    "meta": "DCTdiff · 145.5M params · DPM-Solver-fast, 100 NFE · published FID-50k 4.98",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/ffhq128_mid_deep_x0.jpg",
+      "xt": "img/ffhq128_mid_deep_xt.jpg",
+      "final": "img/ffhq128_mid_deep_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.15"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 1664,
+    "height": 1024,
+    "note": ""
+  },
+  {
+    "key": "ffhq256_mid",
+    "label": "FFHQ-256 mid",
+    "meta": "DCTdiff · 130.8M params · DPM-Solver-fast, 100 NFE · published FID-50k 5.08 · UViT latent 4.26",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/ffhq256_mid_x0.jpg",
+      "xt": "img/ffhq256_mid_xt.jpg",
+      "final": "img/ffhq256_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.15"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 2080,
+    "height": 1280,
+    "note": ""
+  },
+  {
+    "key": "ffhq512_mid",
+    "label": "FFHQ-512 mid",
+    "meta": "DCTdiff · 130.9M params · DPM-Solver-fast, 100 NFE · published FID-50k 7.07 · UViT latent 10.89",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/ffhq512_mid_x0.jpg",
+      "xt": "img/ffhq512_mid_xt.jpg",
+      "final": "img/ffhq512_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.14"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 2080,
+    "height": 1280,
+    "note": ""
+  },
+  {
+    "key": "afhq512_mid",
+    "label": "AFHQ-512 mid",
+    "meta": "DCTdiff · 130.9M params · DPM-Solver-fast, 100 NFE · published FID-50k 8.76 · UViT latent 10.86",
+    "method": "DCTdiff",
+    "files": {
+      "x0": "img/afhq512_mid_x0.jpg",
+      "xt": "img/afhq512_mid_xt.jpg",
+      "final": "img/afhq512_mid_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "#1",
+        "detail": "t 1.00"
+      },
+      {
+        "step": "#10",
+        "detail": "t 0.90"
+      },
+      {
+        "step": "#19",
+        "detail": "t 0.79"
+      },
+      {
+        "step": "#28",
+        "detail": "t 0.66"
+      },
+      {
+        "step": "#37",
+        "detail": "t 0.50"
+      },
+      {
+        "step": "#46",
+        "detail": "t 0.31"
+      },
+      {
+        "step": "#55",
+        "detail": "t 0.14"
+      },
+      {
+        "step": "#64",
+        "detail": "t 0.06"
+      },
+      {
+        "step": "#73",
+        "detail": "t 0.02"
+      },
+      {
+        "step": "#82",
+        "detail": "t 5e-03"
+      },
+      {
+        "step": "#91",
+        "detail": "t 1e-03"
+      },
+      {
+        "step": "#100",
+        "detail": "t 2e-04"
+      },
+      {
+        "step": "out",
+        "detail": "final"
+      }
+    ],
+    "width": 2080,
+    "height": 1280,
+    "note": ""
+  },
+  {
+    "key": "far_base",
+    "label": "FAR-B",
+    "meta": "FAR · 207.9M params · 10 stages × 100-step head, cfg 3 linear · published FID-50k 4.26",
+    "method": "FAR",
+    "files": {
+      "pred": "img/far_base_pred.jpg",
+      "ctx": "img/far_base_ctx.jpg",
+      "final": "img/far_base_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "S1",
+        "detail": "idx 0"
+      },
+      {
+        "step": "S2",
+        "detail": "idx 2"
+      },
+      {
+        "step": "S3",
+        "detail": "idx 3"
+      },
+      {
+        "step": "S4",
+        "detail": "idx 4"
+      },
+      {
+        "step": "S5",
+        "detail": "idx 5"
+      },
+      {
+        "step": "S6",
+        "detail": "idx 6"
+      },
+      {
+        "step": "S7",
+        "detail": "idx 7"
+      },
+      {
+        "step": "S8",
+        "detail": "idx 8"
+      },
+      {
+        "step": "S9",
+        "detail": "idx 9"
+      },
+      {
+        "step": "S10",
+        "detail": "idx 10"
+      }
+    ],
+    "width": 1600,
+    "height": 1280,
+    "note": "Rows are class-conditional: golden retriever, otter, lesser panda, geyser, macaw, valley, balloon, arctic fox."
+  },
+  {
+    "key": "far_large",
+    "label": "FAR-L",
+    "meta": "FAR · 426.4M params · 10 stages × 100-step head, cfg 3 linear · published FID-50k 3.45",
+    "method": "FAR",
+    "files": {
+      "pred": "img/far_large_pred.jpg",
+      "ctx": "img/far_large_ctx.jpg",
+      "final": "img/far_large_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "S1",
+        "detail": "idx 0"
+      },
+      {
+        "step": "S2",
+        "detail": "idx 2"
+      },
+      {
+        "step": "S3",
+        "detail": "idx 3"
+      },
+      {
+        "step": "S4",
+        "detail": "idx 4"
+      },
+      {
+        "step": "S5",
+        "detail": "idx 5"
+      },
+      {
+        "step": "S6",
+        "detail": "idx 6"
+      },
+      {
+        "step": "S7",
+        "detail": "idx 7"
+      },
+      {
+        "step": "S8",
+        "detail": "idx 8"
+      },
+      {
+        "step": "S9",
+        "detail": "idx 9"
+      },
+      {
+        "step": "S10",
+        "detail": "idx 10"
+      }
+    ],
+    "width": 1600,
+    "height": 1280,
+    "note": "Rows are class-conditional: golden retriever, otter, lesser panda, geyser, macaw, valley, balloon, arctic fox."
+  },
+  {
+    "key": "far_huge",
+    "label": "FAR-H",
+    "meta": "FAR · 811.7M params · 10 stages × 100-step head, cfg 3 linear · published FID-50k 3.21",
+    "method": "FAR",
+    "files": {
+      "pred": "img/far_huge_pred.jpg",
+      "ctx": "img/far_huge_ctx.jpg",
+      "final": "img/far_huge_final.jpg"
+    },
+    "headers": [
+      {
+        "step": "S1",
+        "detail": "idx 0"
+      },
+      {
+        "step": "S2",
+        "detail": "idx 2"
+      },
+      {
+        "step": "S3",
+        "detail": "idx 3"
+      },
+      {
+        "step": "S4",
+        "detail": "idx 4"
+      },
+      {
+        "step": "S5",
+        "detail": "idx 5"
+      },
+      {
+        "step": "S6",
+        "detail": "idx 6"
+      },
+      {
+        "step": "S7",
+        "detail": "idx 7"
+      },
+      {
+        "step": "S8",
+        "detail": "idx 8"
+      },
+      {
+        "step": "S9",
+        "detail": "idx 9"
+      },
+      {
+        "step": "S10",
+        "detail": "idx 10"
+      }
+    ],
+    "width": 1600,
+    "height": 1280,
+    "note": "Rows are class-conditional: golden retriever, otter, lesser panda, geyser, macaw, valley, balloon, arctic fox."
+  }
+]

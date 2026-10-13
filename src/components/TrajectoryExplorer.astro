@@ -1,0 +1,120 @@
+---
+import catalog from '../../public/report/catalog.json';
+import { withBase } from '../utils/paths';
+
+const first = catalog.find((item) => item.key === 'ffhq128_mid')!;
+const groups = [
+  { label: 'DCTdiff · CIFAR-10', items: catalog.filter((item) => item.key.startsWith('cifar10')) },
+  { label: 'DCTdiff · CelebA', items: catalog.filter((item) => item.key.startsWith('celeba64')) },
+  { label: 'DCTdiff · ImageNet-64', items: catalog.filter((item) => item.key.startsWith('imgnet64')) },
+  { label: 'DCTdiff · FFHQ / AFHQ', items: catalog.filter((item) => item.key.startsWith('ffhq') || item.key.startsWith('afhq')) },
+  { label: 'FAR · ImageNet-256', items: catalog.filter((item) => item.key.startsWith('far_')) },
+  { label: 'Other released ImageNet-256 models', items: catalog.filter((item) => item.method === 'Comparator') },
+];
+---
+<div class="instrument trajectory-instrument" data-trajectory data-catalog={JSON.stringify(catalog)} data-base={withBase('report/')}>
+  <div class="instrument-topline"><span>02 / Trajectory viewer</span><span>21 runs · 59 report images</span></div>
+  <div class="trajectory-picker">
+    <label for="trajectory-model">Choose a checkpoint</label>
+    <select id="trajectory-model" data-trajectory-model>
+      {groups.map((group) => <optgroup label={group.label}>{group.items.map((item) => <option value={item.key} selected={item.key === first.key}>{item.label}</option>)}</optgroup>)}
+    </select>
+  </div>
+  <div class="trajectory-quick" aria-label="Quick examples">
+    <button type="button" class="instrument-button is-active" data-trajectory-quick="ffhq128_mid" aria-pressed="true">DCTdiff · FFHQ-128</button>
+    <button type="button" class="instrument-button" data-trajectory-quick="far_huge" aria-pressed="false">FAR-H · ImageNet-256</button>
+    <button type="button" class="instrument-button" data-trajectory-quick="flexvar_d24" aria-pressed="false">FlexVAR · ImageNet-256</button>
+  </div>
+  <div class="trajectory-reading">
+    <div><span>Selected run</span><h3 data-trajectory-title>{first.label}</h3><p data-trajectory-meta>{first.meta}</p></div>
+    <div class="trajectory-kind" role="group" aria-label="Trajectory representation" data-trajectory-kinds></div>
+  </div>
+  <div class="trajectory-navigation"><span>Eight fixed samples, one per row · generation moves left to right</span><div><button type="button" data-trajectory-left aria-label="Scroll trajectory left">←</button><button type="button" data-trajectory-right aria-label="Scroll trajectory right">→</button></div></div>
+  <div class="trajectory-scroll" data-trajectory-scroll role="region" aria-label="Intermediate sample strip, scroll horizontally to inspect all steps" tabindex="0">
+    <div class="trajectory-strip" data-trajectory-strip style={`width:${first.width}px`}>
+      <div class="trajectory-steps" data-trajectory-steps style={`grid-template-columns:repeat(${first.headers.length},1fr)`}>{first.headers.map((step) => <div><b>{step.step}</b><small>{step.detail}</small></div>)}</div>
+      <img data-trajectory-image src={withBase('report/' + first.files.x0)} alt={`${first.label}: eight sample trajectories from the original report`} width={first.width} height={first.height} loading="lazy" />
+    </div>
+  </div>
+  <p class="instrument-note" data-trajectory-note>{first.note || 'Columns are successive sampling states. Rows track the same eight samples from start to final output.'}</p>
+  <details class="trajectory-finals" data-trajectory-finals>
+    <summary data-trajectory-finals-label>View 32 additional final samples</summary>
+    <img data-trajectory-final-image src={withBase('report/' + first.files.final)} alt={`${first.label}: additional final samples`} loading="lazy" />
+  </details>
+  <p class="instrument-note">The strip and final grid are reproduced from the completed official-checkpoint audit. The FID values in run descriptions are published checkpoint figures, not re-measured here.</p>
+</div>
+
+<script>
+  type Item = { key: string; label: string; meta: string; method: string; files: Record<string, string>; headers: { step: string; detail: string }[]; width: number; height: number; note: string };
+  const names: Record<string, string> = { x0: 'Predicted image x̂₀', xt: 'Noisy state xₜ', pred: 'Stage prediction', ctx: 'Context passed on', preview: 'Decoded preview' };
+  document.querySelectorAll<HTMLElement>('[data-trajectory]').forEach((root) => {
+    const items = JSON.parse(root.dataset.catalog!) as Item[];
+    const base = root.dataset.base!;
+    const select = root.querySelector<HTMLSelectElement>('[data-trajectory-model]')!;
+    const title = root.querySelector<HTMLElement>('[data-trajectory-title]')!;
+    const meta = root.querySelector<HTMLElement>('[data-trajectory-meta]')!;
+    const kinds = root.querySelector<HTMLElement>('[data-trajectory-kinds]')!;
+    const scroller = root.querySelector<HTMLElement>('[data-trajectory-scroll]')!;
+    const strip = root.querySelector<HTMLElement>('[data-trajectory-strip]')!;
+    const steps = root.querySelector<HTMLElement>('[data-trajectory-steps]')!;
+    const image = root.querySelector<HTMLImageElement>('[data-trajectory-image]')!;
+    const note = root.querySelector<HTMLElement>('[data-trajectory-note]')!;
+    const final = root.querySelector<HTMLImageElement>('[data-trajectory-final-image]')!;
+    const finalsLabel = root.querySelector<HTMLElement>('[data-trajectory-finals-label]')!;
+    const finals = root.querySelector<HTMLDetailsElement>('[data-trajectory-finals]')!;
+    let current: Item;
+    const setKind = (key: string) => {
+      image.src = base + current.files[key];
+      image.alt = `${current.label}: eight ${names[key]?.toLowerCase() || 'preview'} trajectories, successive steps in columns`;
+      kinds.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+        const active = button.dataset.kind === key;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+    const show = (key: string) => {
+      const item = items.find((candidate) => candidate.key === key);
+      if (!item) return;
+      current = item;
+      select.value = key;
+      title.textContent = item.label;
+      meta.textContent = item.meta;
+      strip.style.width = `${item.width}px`;
+      steps.style.gridTemplateColumns = `repeat(${item.headers.length},1fr)`;
+      steps.replaceChildren(...item.headers.map((header) => {
+        const cell = document.createElement('div');
+        const step = document.createElement('b'); step.textContent = header.step;
+        const detail = document.createElement('small'); detail.textContent = header.detail;
+        cell.append(step, detail);
+        return cell;
+      }));
+      image.width = item.width; image.height = item.height;
+      kinds.replaceChildren();
+      const views = Object.keys(item.files).filter((name) => name !== 'final');
+      views.forEach((view) => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'instrument-button'; button.dataset.kind = view;
+        button.textContent = names[view] || view;
+        button.addEventListener('click', () => setKind(view));
+        kinds.append(button);
+      });
+      setKind(views[0]);
+      note.textContent = item.note || 'Columns are successive generation states. Rows track the same eight samples from start to final output.';
+      final.src = base + item.files.final;
+      final.alt = `${item.label}: ${item.method === 'Comparator' ? 'eight' : '32 additional'} final samples`;
+      finalsLabel.textContent = `View ${item.method === 'Comparator' ? '8' : '32 additional'} final samples`;
+      finals.open = false;
+      scroller.scrollLeft = 0;
+      root.querySelectorAll<HTMLButtonElement>('[data-trajectory-quick]').forEach((button) => {
+        const active = button.dataset.trajectoryQuick === key;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+    select.addEventListener('change', () => show(select.value));
+    root.querySelectorAll<HTMLButtonElement>('[data-trajectory-quick]').forEach((button) => button.addEventListener('click', () => show(button.dataset.trajectoryQuick!)));
+    root.querySelector('[data-trajectory-left]')?.addEventListener('click', () => scroller.scrollBy({ left: -scroller.clientWidth * .75, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }));
+    root.querySelector('[data-trajectory-right]')?.addEventListener('click', () => scroller.scrollBy({ left: scroller.clientWidth * .75, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }));
+    show(select.value);
+  });
+</script>

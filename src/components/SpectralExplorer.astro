@@ -1,0 +1,115 @@
+---
+import { withBase } from '../utils/paths';
+---
+<div class="instrument spectral-instrument" data-spectral data-measurements={withBase('report/measurements.json')}>
+  <div class="instrument-topline"><span>01 / Frequency settling</span><span>17 official checkpoints · median of 8 samples</span></div>
+  <div class="instrument-controls" role="group" aria-label="Frequency chart image state">
+    <button type="button" class="instrument-button is-active" data-spectral-view="guess" aria-pressed="true">Model prediction</button>
+    <button type="button" class="instrument-button" data-spectral-view="state" aria-pressed="false">Carried state</button>
+  </div>
+  <p class="instrument-explainer">Each point marks the first step after which a frequency band stays within 0.1 of that trajectory’s own final image. Farther right means the band settles later. The curves below show the full residual history.</p>
+  <div class="spectral-legend" aria-label="Frequency bands">
+    <span><i style="--swatch:var(--band-0)"></i>Coarsest &lt;1/16</span>
+    <span><i style="--swatch:var(--band-1)"></i>1/16–1/8</span>
+    <span><i style="--swatch:var(--band-2)"></i>1/8–1/4</span>
+    <span><i style="--swatch:var(--band-3)"></i>1/4–1/2</span>
+    <span><i style="--swatch:var(--band-4)"></i>Finest &gt;1/2</span>
+  </div>
+  <div class="spectral-plot-scroll" role="region" aria-label="Settle point chart, scroll horizontally if needed" tabindex="0">
+    <svg data-settle-plot role="img" aria-label="Settle points for five frequency bands across DCTdiff and FAR checkpoints"></svg>
+  </div>
+  <p class="instrument-note">Position is fraction of sampling work: network calls for DCTdiff, stages for FAR. A point at the right edge settles only at the final image. CIFAR-10 has no coarsest non-DC band at 32².</p>
+  <div class="spectral-curves-heading"><h3>Residual through generation</h3><span>Lower means closer to final</span></div>
+  <div class="spectral-curves" data-spectral-curves aria-live="polite"></div>
+  <p class="instrument-note">Residual 0 means the band matches the final image; 1 means its energy is missing or wrong; values above 1 indicate extra energy or details later redrawn. These charts measure when a sample is decided, not realism or FID.</p>
+</div>
+
+<script>
+  type View = 'guess' | 'state';
+  type Run = { key: string; label: string; method: string; prog: number[]; views: Record<View, { bands: number[][] }>; commits: Record<View, (number | null)[]> };
+  const ns = 'http://www.w3.org/2000/svg';
+  const palette = ['--band-0', '--band-1', '--band-2', '--band-3', '--band-4'];
+  const bands = ['Coarsest <1/16', '1/16–1/8', '1/8–1/4', '1/4–1/2', 'Finest >1/2'];
+  const svgEl = (tag: string, attrs: Record<string, string | number>, parent: Element) => {
+    const node = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+    parent.appendChild(node);
+    return node;
+  };
+  const color = (token: string) => getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+
+  document.querySelectorAll<HTMLElement>('[data-spectral]').forEach(async (root) => {
+    const plot = root.querySelector<SVGSVGElement>('[data-settle-plot]');
+    const curves = root.querySelector<HTMLElement>('[data-spectral-curves]');
+    if (!plot || !curves) return;
+    let runs: Run[];
+    try {
+      const response = await fetch(root.dataset.measurements!);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      runs = await response.json();
+    } catch {
+      root.insertAdjacentHTML('beforeend', '<p class="instrument-note">The measurement data could not be loaded. The complete source report remains available above.</p>');
+      return;
+    }
+    let view: View = 'guess';
+    const isEmpty = (run: Run, band: number) => run.views[view].bands[band].every((value) => value === 0);
+    const drawPoints = () => {
+      plot.replaceChildren();
+      const width = 920, left = 216, right = 22, top = 34, row = 27, height = top + row * runs.length + 18;
+      plot.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      plot.setAttribute('width', String(width));
+      plot.setAttribute('height', String(height));
+      const x = (n: number) => left + n * (width - left - right);
+      for (const n of [0, .25, .5, .75, 1]) {
+        svgEl('line', { x1: x(n), x2: x(n), y1: top - 8, y2: height - 8, stroke: color('--line') }, plot);
+        svgEl('text', { x: x(n), y: 17, 'text-anchor': 'middle', fill: color('--quiet') }, plot).textContent = n === 0 ? 'start' : n === 1 ? 'end' : `${n * 100}%`;
+      }
+      runs.forEach((run, index) => {
+        const y = top + index * row + row / 2;
+        if (index && runs[index - 1].method !== run.method) svgEl('line', { x1: 0, x2: width, y1: y - row / 2, y2: y - row / 2, stroke: color('--line') }, plot);
+        svgEl('text', { x: 0, y: y + 4, fill: color('--muted') }, plot).textContent = run.label;
+        const points = run.commits[view].map((n, b) => isEmpty(run, b) ? null : n === null ? 1 : n);
+        const valid = points.filter((n): n is number => n !== null);
+        if (valid.length > 1) svgEl('line', { x1: x(Math.min(...valid)), x2: x(Math.max(...valid)), y1: y, y2: y, stroke: color('--line'), 'stroke-width': 2 }, plot);
+        points.forEach((n, b) => {
+          if (n === null) return;
+          const dot = svgEl('circle', { cx: x(n), cy: y, r: 6, fill: color(palette[b]), stroke: color('--bg'), 'stroke-width': 2 }, plot);
+          svgEl('title', {}, dot).textContent = `${run.label}: ${bands[b]} settles at ${run.commits[view][b] === null ? 'final step' : `${Math.round(n * 100)}% of sampling`}`;
+        });
+      });
+    };
+    const drawCurves = () => {
+      curves.replaceChildren();
+      const width = 280, height = 150, left = 31, right = 10, top = 12, bottom = 24;
+      const x = (n: number) => left + n * (width - left - right);
+      const y = (n: number) => top + (1 - Math.min(n, 2) / 2) * (height - top - bottom);
+      runs.forEach((run) => {
+        const panel = document.createElement('div'); panel.className = 'spectral-panel';
+        const head = document.createElement('div'); head.className = 'spectral-panel-head';
+        const name = document.createElement('strong'); name.textContent = run.label;
+        const method = document.createElement('span'); method.textContent = run.method;
+        head.append(name, method); panel.append(head);
+        const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': `${run.label} ${view === 'guess' ? 'prediction' : 'carried state'} residual by frequency band over generation` }, panel);
+        for (const n of [0, 1, 2]) {
+          svgEl('line', { x1: left, x2: width - right, y1: y(n), y2: y(n), stroke: color('--line') }, svg);
+          svgEl('text', { x: left - 5, y: y(n) + 4, 'text-anchor': 'end', fill: color('--quiet') }, svg).textContent = String(n);
+        }
+        for (const n of [0, .5, 1]) svgEl('text', { x: x(n), y: height - 4, 'text-anchor': n === 0 ? 'start' : n === 1 ? 'end' : 'middle', fill: color('--quiet') }, svg).textContent = n === 0 ? 'start' : n === 1 ? 'end' : '50%';
+        run.views[view].bands.forEach((values, band) => {
+          if (isEmpty(run, band)) return;
+          const points = values.map((value, index) => `${x(run.prog[index]).toFixed(1)},${y(value).toFixed(1)}`).join(' ');
+          const line = svgEl('polyline', { points, fill: 'none', stroke: color(palette[band]), 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+          svgEl('title', {}, line).textContent = bands[band];
+        });
+        curves.append(panel);
+      });
+    };
+    const redraw = () => { drawPoints(); drawCurves(); };
+    root.querySelectorAll<HTMLButtonElement>('[data-spectral-view]').forEach((button) => button.addEventListener('click', () => {
+      view = button.dataset.spectralView as View;
+      root.querySelectorAll<HTMLButtonElement>('[data-spectral-view]').forEach((item) => { item.classList.toggle('is-active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
+      redraw();
+    }));
+    redraw();
+  });
+</script>

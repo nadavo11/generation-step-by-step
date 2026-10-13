@@ -3,6 +3,8 @@ import Base from '../../layouts/Base.astro';
 import ExperimentStatus from '../../components/ExperimentStatus.astro';
 import MetricTable from '../../components/MetricTable.astro';
 import QualitativeSamples from '../../components/QualitativeSamples.astro';
+import SpectralExplorer from '../../components/SpectralExplorer.astro';
+import TrajectoryExplorer from '../../components/TrajectoryExplorer.astro';
 import Caveats from '../../components/Caveats.astro';
 import NextExperiments from '../../components/NextExperiments.astro';
 import { projects } from '../../data/projects';
@@ -48,6 +50,7 @@ const heroFigure = project.figures[0];
         <a href="#design">Experimental design</a>
         <a href="#result">Main result</a>
         <a href="#visuals">Visual evidence</a>
+        <a href="#instruments">Explore all trajectories</a>
         <a href="#caveat">Caveat</a>
         <a href="#interpretation">Interpretation</a>
         <a href="#status">Status and next steps</a>
@@ -94,6 +97,15 @@ const heroFigure = project.figures[0];
           <p class="section-lead">The available figures show trajectories from official DCTdiff, FAR, D-AR, FlexVAR, VAR, and DetailFlow checkpoints. They provide context for streaming previews; they are not A0/A1 samples.</p>
           <QualitativeSamples findings={project.qualitative} figures={project.figures} />
           <a class="text-link" href={withBase('report/')}>Open every strip and frequency plot in the source report <span aria-hidden="true">↗</span></a>
+        </section>
+
+        <section id="instruments" class="story-section instruments-section">
+          <div class="section-heading-row"><p class="section-overline">Interactive audit instruments</p><span class="evidence-tag">Completed checkpoint audit</span></div>
+          <h2>Inspect the full evidence.</h2>
+          <p class="section-lead">Switch between a model’s predicted image and the state carried to its next step. Compare when each frequency band settles across every DCTdiff and FAR checkpoint, then inspect all sampled datasets and model sizes.</p>
+          <SpectralExplorer />
+          <TrajectoryExplorer />
+          <a class="text-link" href={withBase('report/')}>Read methods, checkpoint sources, and the original report <span aria-hidden="true">↗</span></a>
         </section>
 
         {featured && <section id="caveat" class="story-section caveat-section">

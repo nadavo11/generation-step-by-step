@@ -36,3 +36,10 @@ checkerboard caveat in seeds 5 and 7. Exact A0/A1 FIDs and G2 images were not
 supplied, so the site does not show them. Published FIDs in the checkpoint
 audit remain attributed to papers or official checkpoint descriptions; its
 eight-sample trajectories are not new FID measurements.
+
+The project's interactive audit instruments reuse the archived report's exact
+measurement arrays (`public/report/measurements.json`) and its 21 trajectory
+strips (`public/report/catalog.json`, with images under `public/report/img/`).
+The 17 DCTdiff/FAR entries drive the settle chart and residual curves; all 21
+sampled runs are available in the trajectory viewer. These archived artifacts
+are contextual evidence for streaming behavior, separate from the A0/A1 result.
