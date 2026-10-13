@@ -28,9 +28,11 @@ completed, reported, and ongoing results separately. Put only accessible,
 report-referenced figures in `public/` and describe their provenance in the
 project's `sourceNote`.
 
-The first project is based only on the completed “Generation, Step by Step”
-report, copied into `public/report/` with its referenced image strips. Published
-FID figures remain attributed to papers or official checkpoint descriptions;
-the report's eight-sample trajectories are not new FID measurements. This report
-does not contain the matched-100k STRONG result or a seeds 5/7 checkerboard
-finding, so this page does not claim either.
+The first project combines two clearly labeled sources: the completed
+“Generation, Step by Step” checkpoint report in `public/report/`, and the
+researcher's redesign brief. The brief supplies the matched-100k A0/A1 STRONG
+verdict, approximately 5% relative FID cost, and the single-token G2
+checkerboard caveat in seeds 5 and 7. Exact A0/A1 FIDs and G2 images were not
+supplied, so the site does not show them. Published FIDs in the checkpoint
+audit remain attributed to papers or official checkpoint descriptions; its
+eight-sample trajectories are not new FID measurements.

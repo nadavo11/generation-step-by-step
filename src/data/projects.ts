@@ -1,16 +1,26 @@
 import type { Project } from '../types';
 
-// This entry is transcribed from the approved “Generation, Step by Step” report.
+// The checkpoint audit fields below come from “Generation, Step by Step.”
+// featuredResult comes from the researcher's redesign brief and is labeled separately.
 export const projects: Project[] = [
   {
     slug: 'generation-step-by-step',
     title: 'Generation, Step by Step',
+    featuredResult: {
+      control: 'A0 · joint control',
+      variant: 'A1 · next-frequency',
+      training: 'Matched 100k comparison',
+      relativeCost: '≈5%',
+      criterion: 'Pre-registered STRONG criterion satisfied',
+      caveat: 'Persistent single-token G2 checkerboard artifact in seeds 5 and 7.',
+      provenance: 'Researcher-supplied result. The linked checkpoint trajectory report does not include the A0/A1 FID values or G2 sample images.',
+    },
     category: 'Image generation · checkpoint audit',
-    contribution: 'An image-space audit of when structure and detail emerge in official DCTdiff and FAR samples, alongside four released streaming and coarse-to-fine models.',
+    contribution: 'At matched 100k, next-frequency generation meets STRONG at approximately 5% FID cost; a separate checkpoint audit shows how related generators reveal image structure over time.',
     status: 'completed',
     verdict: 'DCTdiff settles from coarse to fine in pixel space. FAR’s carried prefix stays blurred; most mid- and high-frequency pixel detail is decided at its last stage.',
     motivation: 'A generator can expose intermediate states without providing a useful image preview. This audit decodes those states and measures how closely each frequency band matches the trajectory’s own final image.',
-    question: 'Do successive sampling states become usable image previews, and when does each pixel-frequency band stop changing?',
+    question: 'Can next-frequency generation retain near-control image quality at matched training, and when do related generators expose a usable preview?',
     setup: 'Eight trajectories per checkpoint. The report samples all 14 public DCTdiff and 3 FAR checkpoints with official samplers, plus one ImageNet-256 checkpoint each for D-AR, FlexVAR, VAR, and DetailFlow. Luma FFT residuals are measured against each trajectory’s final sample and summarized by the median over eight samples.',
     metrics: [
       { label: 'DCTdiff checkpoints', value: '14', context: 'Official public checkpoints sampled across five datasets.' },

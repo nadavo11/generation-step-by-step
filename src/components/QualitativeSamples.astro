@@ -6,5 +6,18 @@ const { findings, figures } = Astro.props;
 ---
 <div class="qualitative-layout">
   <ul class="finding-list">{findings.map((finding) => <li>{finding}</li>)}</ul>
-  {figures.length > 0 && <div class="figure-stack">{figures.map((figure) => <Figure figure={figure} />)}</div>}
+  {figures.length > 0 && <div class="gallery" data-gallery>
+    <div class="gallery-bar"><span>{figures.length} reported trajectory views</span><div class="gallery-controls"><button type="button" data-gallery-prev aria-label="Previous figure">←</button><button type="button" data-gallery-next aria-label="Next figure">→</button></div></div>
+    <div class="figure-rail" data-figure-rail>{figures.map((figure) => <div class="figure-slide"><Figure figure={figure} /></div>)}</div>
+    <p class="gallery-hint">Scroll sideways to explore. Select a figure to enlarge.</p>
+  </div>}
 </div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((gallery) => {
+    const rail = gallery.querySelector<HTMLElement>('[data-figure-rail]');
+    if (!rail) return;
+    const move = (direction: number) => rail.scrollBy({ left: direction * rail.clientWidth * 0.9, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    gallery.querySelector('[data-gallery-prev]')?.addEventListener('click', () => move(-1));
+    gallery.querySelector('[data-gallery-next]')?.addEventListener('click', () => move(1));
+  });
+</script>

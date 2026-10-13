@@ -5,6 +5,23 @@ interface Props { figure: FigureData; }
 const { figure } = Astro.props;
 ---
 <figure class="research-figure">
-  <a href={withBase(figure.src)} target="_blank" rel="noopener"><img src={withBase(figure.src)} alt={figure.alt} loading="lazy" /></a>
+  <button type="button" class="figure-open" data-open-figure aria-label={`Enlarge figure: ${figure.caption}`}>
+    <img src={withBase(figure.src)} alt={figure.alt} loading="lazy" />
+    <span class="figure-zoom" aria-hidden="true">Enlarge ↗</span>
+  </button>
   <figcaption>{figure.caption}{figure.credit && <span class="figure-credit">{figure.credit}</span>}</figcaption>
+  <dialog class="figure-dialog" aria-label={figure.caption}>
+    <button type="button" class="figure-close" data-close-figure aria-label="Close enlarged figure">Close ×</button>
+    <div class="figure-dialog-inner"><img src={withBase(figure.src)} alt={figure.alt} /><p>{figure.caption}</p></div>
+  </dialog>
 </figure>
+<script>
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const open = target.closest<HTMLButtonElement>('[data-open-figure]');
+    if (open) open.closest('figure')?.querySelector('dialog')?.showModal();
+    const close = target.closest<HTMLButtonElement>('[data-close-figure]');
+    if (close) close.closest('dialog')?.close();
+    if (target instanceof HTMLDialogElement && target.classList.contains('figure-dialog')) target.close();
+  });
+</script>

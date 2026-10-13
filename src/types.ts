@@ -26,9 +26,20 @@ export interface FigureData {
   credit?: string;
 }
 
+export interface FeaturedResult {
+  control: string;
+  variant: string;
+  training: string;
+  relativeCost: string;
+  criterion: string;
+  caveat: string;
+  provenance: string;
+}
+
 export interface Project {
   slug: string;
   title: string;
+  featuredResult?: FeaturedResult;
   category: string;
   contribution: string;
   status: EvidenceStatus;
