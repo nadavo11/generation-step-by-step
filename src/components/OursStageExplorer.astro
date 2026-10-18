@@ -3,14 +3,21 @@ import { withBase } from '../utils/paths';
 
 const source = withBase('ours/ffhq64-a1-d256/stages-146k.png');
 const stages = [
-  { label: 'G0', detail: 'Coarsest frequency group' },
-  { label: 'G0–G1', detail: 'Early structure' },
-  { label: 'G0–G2', detail: 'More edges and detail' },
-  { label: 'G0–G3', detail: 'Complete generated image' },
+  { label: 'G0', detail: 'Coarsest frequency group', channels: 6, total: 6, reading: 'The first six DCT channels provide a coarse image preview.' },
+  { label: 'G0–G1', detail: 'Early structure', channels: 12, total: 18, reading: 'Twelve more channels are added to the existing six.' },
+  { label: 'G0–G2', detail: 'More edges and detail', channels: 18, total: 36, reading: 'A third group adds 18 channels; the cumulative preview now uses 36.' },
+  { label: 'G0–G3', detail: 'Complete generated image', channels: 18, total: 54, reading: 'The final 18 channels complete the saved 54-channel reconstruction.' },
 ];
 ---
 <div class="ours-explorer" data-ours-explorer data-sprite={source}>
   <div class="ours-explorer-top"><span>Eight fixed samples / four cumulative stages</span><span>FFHQ-64 · A1 D256 · EMA · 146k</span></div>
+  <div class="ours-method-diagram" role="group" aria-label="Four cumulative DCT frequency groups">
+    <div class="ours-diagram-label"><span>Predicted groups</span><span>Cumulative decoded image</span></div>
+    <div class="ours-channel-track">
+      {stages.map((item, index) => <div class:list={{ 'is-current': index === 3, 'is-included': index <= 3 }} style={`--group-size:${item.channels}`} data-channel-stage={index}><strong>G{index}</strong><div class="ours-channel-cells" aria-hidden="true">{Array.from({ length: item.channels }, () => <i></i>)}</div><small>+{item.channels}</small></div>)}
+    </div>
+    <p><strong data-channel-total>54 / 54 channels included</strong><span data-stage-reading>{stages[3].reading}</span></p>
+  </div>
   <div class="ours-explorer-grid">
     <div class="ours-sample">
       <canvas width="256" height="256" role="img" aria-label="Selected generated FFHQ-64 face at the selected cumulative frequency stage" data-ours-canvas></canvas>
@@ -22,6 +29,7 @@ const stages = [
     </div>
     <div class="ours-stage-controls">
       <span class="ours-control-label">Follow one sample</span>
+      <div class="ours-playback"><button type="button" data-stage-play aria-label="Play the four generation stages">Play stages <span aria-hidden="true">▶</span></button><span data-stage-position>Stage 4 of 4</span></div>
       {stages.map((stage, index) => <button type="button" data-stage={index} class:list={{ 'is-active': index === 3 }} aria-pressed={index === 3 ? 'true' : 'false'}><span>{stage.label}</span><small>{stage.detail}</small></button>)}
       <div class="ours-upscale">
         <span class="ours-control-label">64 → 256 px display</span>
@@ -51,6 +59,20 @@ const stages = [
     if (!ctx) return;
     const sprite = new Image();
     let stage = 3, sample = 0, smooth = true;
+    let timer: number | undefined;
+    const stageData = [
+      { total: 6, reading: 'The first six DCT channels provide a coarse image preview.' },
+      { total: 18, reading: 'Twelve more channels are added to the existing six.' },
+      { total: 36, reading: 'A third group adds 18 channels; the cumulative preview now uses 36.' },
+      { total: 54, reading: 'The final 18 channels complete the saved 54-channel reconstruction.' },
+    ];
+    const playButton = root.querySelector<HTMLButtonElement>('[data-stage-play]')!;
+    const stop = () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = undefined;
+      playButton.innerHTML = 'Play stages <span aria-hidden="true">▶</span>';
+      playButton.setAttribute('aria-label', 'Play the four generation stages');
+    };
     const draw = () => {
       if (!sprite.complete || !sprite.naturalWidth) return;
       ctx.clearRect(0, 0, 256, 256);
@@ -62,13 +84,32 @@ const stages = [
     };
     sprite.onload = draw;
     sprite.src = root.dataset.sprite!;
-    root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((button) => button.addEventListener('click', () => {
-      stage = Number(button.dataset.stage);
-      root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((item) => { item.classList.toggle('is-active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
+    const setStage = (index: number) => {
+      stage = index;
+      root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((item) => { const active = Number(item.dataset.stage) === index; item.classList.toggle('is-active', active); item.setAttribute('aria-pressed', String(active)); });
+      root.querySelectorAll<HTMLElement>('[data-channel-stage]').forEach((item) => {
+        const value = Number(item.dataset.channelStage);
+        item.classList.toggle('is-included', value <= stage);
+        item.classList.toggle('is-current', value === stage);
+      });
+      root.querySelector<HTMLElement>('[data-channel-total]')!.textContent = `${stageData[stage].total} / 54 channels included`;
+      root.querySelector<HTMLElement>('[data-stage-reading]')!.textContent = stageData[stage].reading;
+      root.querySelector<HTMLElement>('[data-stage-position]')!.textContent = `Stage ${stage + 1} of 4`;
       draw();
-    }));
-    root.querySelector('[data-sample-prev]')?.addEventListener('click', () => { sample = (sample + 7) % 8; draw(); });
-    root.querySelector('[data-sample-next]')?.addEventListener('click', () => { sample = (sample + 1) % 8; draw(); });
+    };
+    root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((button) => button.addEventListener('click', () => { stop(); setStage(Number(button.dataset.stage)); }));
+    root.querySelector('[data-sample-prev]')?.addEventListener('click', () => { stop(); sample = (sample + 7) % 8; draw(); });
+    root.querySelector('[data-sample-next]')?.addEventListener('click', () => { stop(); sample = (sample + 1) % 8; draw(); });
+    playButton.addEventListener('click', () => {
+      if (timer !== undefined) { stop(); return; }
+      setStage(0);
+      playButton.innerHTML = 'Pause stages <span aria-hidden="true">Ⅱ</span>';
+      playButton.setAttribute('aria-label', 'Pause generation stages');
+      timer = window.setInterval(() => {
+        if (stage === 3) { stop(); return; }
+        setStage(stage + 1);
+      }, 1050);
+    });
     root.querySelectorAll<HTMLButtonElement>('[data-sampling]').forEach((button) => button.addEventListener('click', () => {
       smooth = button.dataset.sampling === 'smooth';
       root.querySelectorAll<HTMLButtonElement>('[data-sampling]').forEach((item) => { item.classList.toggle('is-active', item === button); item.setAttribute('aria-pressed', String(item === button)); });

@@ -1,0 +1,123 @@
+---
+import catalog from '../../public/report/catalog.json';
+import { withBase } from '../utils/paths';
+
+const dct = catalog.find((item) => item.key === 'ffhq128_mid')!;
+const far = catalog.find((item) => item.key === 'far_huge')!;
+const models = [
+  {
+    key: 'ours', title: 'Ours · A1', subtitle: 'FFHQ-64 · cumulative groups',
+    source: withBase('ours/ffhq64-a1-d256/trajectory-146k.png'),
+    labels: ['G0', 'G0–G1', 'G0–G2', 'G0–G3'],
+    fractions: [0.25, 0.5, 0.75, 1],
+    reading: 'A frequency group is added at each step. The decoded prefix is the preview.',
+  },
+  {
+    key: 'dct', title: 'DCTdiff', subtitle: 'FFHQ-128 · predicted image',
+    source: withBase('report/' + dct.files.x0),
+    labels: dct.headers.map((header) => header.step),
+    fractions: dct.headers.map((header) => header.step === 'out' ? 1 : Number(header.step.slice(1)) / 100),
+    reading: 'A diffusion prediction becomes less noisy across solver calls; no frequency group is prescribed.',
+  },
+  {
+    key: 'far', title: 'FAR-H', subtitle: 'ImageNet-256 · stage prediction',
+    source: withBase('report/' + far.files.pred),
+    labels: far.headers.map((header) => header.step),
+    fractions: far.headers.map((_, index) => (index + 1) / far.headers.length),
+    reading: 'Each stage predicts a full image. Later stages can redraw earlier detail.',
+  },
+];
+---
+<div class="comparison-scrubber" data-comparison-scrubber data-models={JSON.stringify(models)}>
+  <div class="comparison-heading"><span>Three generation paths</span><span>Eight saved samples per method</span></div>
+  <div class="comparison-controls">
+    <button type="button" class="comparison-play" data-comparison-play aria-label="Play generation progression">Play progression</button>
+    <div class="comparison-range"><label for="comparison-progress">Sampling progress <output for="comparison-progress" data-comparison-percent>50%</output></label><input id="comparison-progress" type="range" min="0" max="100" value="50" data-comparison-progress aria-label="Normalized generation progress" /></div>
+    <div class="comparison-sample-nav"><button type="button" data-comparison-prev aria-label="Previous sample index">←</button><span data-comparison-sample>Sample index 1 / 8</span><button type="button" data-comparison-next aria-label="Next sample index">→</button></div>
+  </div>
+  <div class="comparison-panels">
+    {models.map((model) => <figure class="comparison-panel" data-comparison-panel={model.key}>
+      <div class="comparison-panel-head"><strong>{model.title}</strong><span>{model.subtitle}</span></div>
+      <canvas width="256" height="256" role="img" aria-label={`${model.title} generated preview at normalized halfway progress`} data-comparison-canvas></canvas>
+      <figcaption><span data-comparison-frame>Loading saved strip…</span><p>{model.reading}</p></figcaption>
+    </figure>)}
+  </div>
+  <p class="instrument-note comparison-disclaimer">The slider aligns each method by fraction of its own sampling work: 400 A1 calls, 100 DCTdiff calls, or 10 FAR stages. Each panel shows the latest saved view reached at that fraction; before its first saved view, the panel is blank. It does not align absolute compute, dataset, resolution, or sample identity. “Sample index 1” is a different generated image in each run. Saved tiles are scaled for display only.</p>
+  <noscript><p>JavaScript enables the comparison. The <a href={withBase('projects/generation-step-by-step/#visuals')}>saved trajectory figures</a> remain available above.</p></noscript>
+</div>
+
+<script>
+  type Model = { key: string; title: string; subtitle: string; source: string; labels: string[]; fractions: number[]; reading: string };
+  document.querySelectorAll<HTMLElement>('[data-comparison-scrubber]').forEach((root) => {
+    const models = JSON.parse(root.dataset.models!) as Model[];
+    const slider = root.querySelector<HTMLInputElement>('[data-comparison-progress]')!;
+    const percent = root.querySelector<HTMLOutputElement>('[data-comparison-percent]')!;
+    const sampleText = root.querySelector<HTMLElement>('[data-comparison-sample]')!;
+    const playButton = root.querySelector<HTMLButtonElement>('[data-comparison-play]')!;
+    const sprites = new Map<string, HTMLImageElement>();
+    let sample = 0;
+    let timer: number | undefined;
+
+    const render = () => {
+      const progress = Number(slider.value) / 100;
+      percent.value = `${slider.value}%`;
+      sampleText.textContent = `Sample index ${sample + 1} / 8`;
+      for (const model of models) {
+        const panel = root.querySelector<HTMLElement>(`[data-comparison-panel="${model.key}"]`)!;
+        const canvas = panel.querySelector<HTMLCanvasElement>('[data-comparison-canvas]')!;
+        const frame = panel.querySelector<HTMLElement>('[data-comparison-frame]')!;
+        const sprite = sprites.get(model.key);
+        let index = -1;
+        model.fractions.forEach((fraction, candidate) => { if (fraction <= progress + 1e-9) index = candidate; });
+        frame.textContent = index < 0 ? 'No saved view yet' : `${model.labels[index]} · view ${index + 1} of ${model.labels.length}`;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
+        if (index < 0) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.setAttribute('aria-label', `${model.title}: no saved preview at this sampling fraction`);
+          continue;
+        }
+        if (!sprite?.naturalWidth) continue;
+        const width = sprite.naturalWidth / model.labels.length;
+        const height = sprite.naturalHeight / 8;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(sprite, index * width, sample * height, width, height, 0, 0, canvas.width, canvas.height);
+        canvas.setAttribute('aria-label', `${model.title}, sample index ${sample + 1}, ${model.labels[index]}, display enlargement`);
+      }
+    };
+    const stop = () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = undefined;
+      playButton.textContent = 'Play progression';
+      playButton.setAttribute('aria-label', 'Play generation progression');
+    };
+    models.forEach((model) => {
+      const sprite = new Image();
+      sprite.onload = render;
+      sprite.onerror = () => {
+        root.querySelector<HTMLElement>(`[data-comparison-panel="${model.key}"] [data-comparison-frame]`)!.textContent = 'Saved strip could not be loaded';
+      };
+      sprites.set(model.key, sprite);
+      sprite.src = model.source;
+    });
+    slider.addEventListener('input', () => { stop(); render(); });
+    root.querySelector('[data-comparison-prev]')?.addEventListener('click', () => { sample = (sample + 7) % 8; render(); });
+    root.querySelector('[data-comparison-next]')?.addEventListener('click', () => { sample = (sample + 1) % 8; render(); });
+    playButton.addEventListener('click', () => {
+      if (timer !== undefined) { stop(); return; }
+      if (Number(slider.value) >= 100) slider.value = '0';
+      playButton.textContent = 'Pause progression';
+      playButton.setAttribute('aria-label', 'Pause generation progression');
+      render();
+      timer = window.setInterval(() => {
+        const next = Math.min(100, Number(slider.value) + 2);
+        slider.value = String(next);
+        render();
+        if (next === 100) stop();
+      }, 130);
+    });
+    render();
+  });
+</script>

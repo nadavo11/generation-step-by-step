@@ -1,6 +1,7 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import OursStageExplorer from '../../../components/OursStageExplorer.astro';
+import StageSpectrum from '../../../components/StageSpectrum.astro';
 import ExperimentStatus from '../../../components/ExperimentStatus.astro';
 import { withBase } from '../../../utils/paths';
 const image = (name: string) => withBase('ours/ffhq64-a1-d256/' + name);
@@ -44,6 +45,7 @@ const image = (name: string) => withBase('ours/ffhq64-a1-d256/' + name);
           <h2>One face through four cumulative stages.</h2>
           <p class="section-lead">Choose a fixed sample and move from G0 to G0–G3. The source sheet contains eight generated faces across four cumulative reconstructions.</p>
           <OursStageExplorer />
+          <StageSpectrum />
           <a class="text-link" href={withBase('projects/generation-step-by-step/#instruments')}>Compare this trajectory with DCTdiff and FAR in the streaming report <span aria-hidden="true">↗</span></a>
         </section>
 

@@ -42,3 +42,11 @@ pixels for the montages. Spectral residuals use the original audit's luma FFT
 bands, lower median of eight samples, and 0.1 settle rule, measured from the
 saved 8-bit PNG. The A1 stage viewer crops that source sheet in the browser;
 its smooth 4× option is display interpolation, not generated super-resolution.
+
+The streaming report's comparison scrubber reads the saved A1, DCTdiff, and
+FAR strips. Its slider uses each run's own fraction of sampling work and
+shows the last saved frame reached, with blank panels before the first frame.
+The panels differ in dataset, resolution, and total compute. The A1 report's
+channel diagram uses the documented 6/12/18/18 grouping, and its frequency
+heatmap reads the derived `spectral.json` values. Playback in both views
+starts only when clicked.

@@ -1,0 +1,20 @@
+---
+import measurement from '../../public/ours/ffhq64-a1-d256/spectral.json';
+const labels = ['<1/16', '1/16–1/8', '1/8–1/4', '1/4–1/2', '>1/2'];
+const stages = ['G0', 'G0–G1', 'G0–G2', 'G0–G3'];
+const bands = measurement.views.guess.bands;
+const opacity = (value: number) => (0.05 + 0.54 * (1 - Math.min(1, value))).toFixed(3);
+---
+<div class="spectrum-explainer">
+  <div class="comparison-heading"><span>Frequency evidence from the saved sheet</span><span>8-bit images · median of eight samples</span></div>
+  <h3>Which details are already decided?</h3>
+  <p>Each cell compares a stage with the <em>same sample’s</em> final G3 image. Darker cells still differ; brighter cells are closer to that final image. This measures commitment within a trajectory, not realism or FID.</p>
+  <div class="spectrum-table-wrap" role="region" aria-label="A1 frequency residual heatmap" tabindex="0">
+    <table class="spectrum-table">
+      <thead><tr><th scope="col">Pixel frequency / Nyquist</th>{stages.map((stage) => <th scope="col">{stage}</th>)}</tr></thead>
+      <tbody>{labels.map((label, band) => <tr><th scope="row">{label}</th>{stages.map((_, stage) => <td style={`--cell-opacity:${opacity(bands[band][stage])}`}><span>{bands[band][stage].toFixed(2)}</span></td>)}</tr>)}</tbody>
+    </table>
+  </div>
+  <div class="spectrum-reading"><strong>Read the pattern</strong><p>At G0, the three lowest measured bands are already below the audit’s 0.1 settle threshold. The 1/4–1/2 band reaches it at G0–G2; the finest band reaches it only at G0–G3.</p></div>
+  <p class="instrument-note">Values come from the saved 8-bit FFHQ-64 stage PNG using the streaming report’s luma FFT bands and lower median. A residual of 0 matches the final image in that band; 1 means its final energy is still missing or wrong; values above 1 reflect extra or incorrect energy.</p>
+</div>
