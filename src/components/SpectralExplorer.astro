@@ -1,13 +1,14 @@
 ---
 import { withBase } from '../utils/paths';
+import ours from '../../public/ours/ffhq64-a1-d256/spectral.json';
 ---
-<div class="instrument spectral-instrument" data-spectral data-measurements={withBase('report/measurements.json')}>
-  <div class="instrument-topline"><span>01 / Frequency settling</span><span>17 official checkpoints · median of 8 samples</span></div>
+<div class="instrument spectral-instrument" data-spectral data-measurements={withBase('report/measurements.json')} data-ours={JSON.stringify(ours)}>
+  <div class="instrument-topline"><span>01 / Frequency settling</span><span>17 official checkpoints + ours A1 · median of 8 samples</span></div>
   <div class="instrument-controls" role="group" aria-label="Frequency chart image state">
-    <button type="button" class="instrument-button is-active" data-spectral-view="guess" aria-pressed="true">Model prediction</button>
+    <button type="button" class="instrument-button is-active" data-spectral-view="guess" aria-pressed="true">Prediction / preview</button>
     <button type="button" class="instrument-button" data-spectral-view="state" aria-pressed="false">Carried state</button>
   </div>
-  <p class="instrument-explainer">Each point marks the first step after which a frequency band stays within 0.1 of that trajectory’s own final image. Farther right means the band settles later. The curves below show the full residual history.</p>
+  <p class="instrument-explainer">Each point marks the first step after which a frequency band stays within 0.1 of that trajectory’s own final image. Farther right means the band settles later. The curves below show the full residual history. Ours A1 uses its four cumulative G0–G3 images, measured from the saved 8-bit FFHQ-64 stage sheet.</p>
   <div class="spectral-legend" aria-label="Frequency bands">
     <span><i style="--swatch:var(--band-0)"></i>Coarsest &lt;1/16</span>
     <span><i style="--swatch:var(--band-1)"></i>1/16–1/8</span>
@@ -16,9 +17,9 @@ import { withBase } from '../utils/paths';
     <span><i style="--swatch:var(--band-4)"></i>Finest &gt;1/2</span>
   </div>
   <div class="spectral-plot-scroll" role="region" aria-label="Settle point chart, scroll horizontally if needed" tabindex="0">
-    <svg data-settle-plot role="img" aria-label="Settle points for five frequency bands across DCTdiff and FAR checkpoints"></svg>
+    <svg data-settle-plot role="img" aria-label="Settle points for five frequency bands across DCTdiff, FAR, and our A1 sample"></svg>
   </div>
-  <p class="instrument-note">Position is fraction of sampling work: network calls for DCTdiff, stages for FAR. A point at the right edge settles only at the final image. CIFAR-10 has no coarsest non-DC band at 32².</p>
+  <p class="instrument-note">Position is fraction of sampling work: network calls for DCTdiff; stages for FAR and ours A1. A point at the right edge settles only at the final image. CIFAR-10 has no coarsest non-DC band at 32². Only one cumulative reconstruction was saved per A1 stage; that same displayed image appears under both chart modes. Datasets and stage counts differ; compare progression, not FID.</p>
   <div class="spectral-curves-heading"><h3>Residual through generation</h3><span>Lower means closer to final</span></div>
   <div class="spectral-curves" data-spectral-curves aria-live="polite"></div>
   <p class="instrument-note">Residual 0 means the band matches the final image; 1 means its energy is missing or wrong; values above 1 indicate extra energy or details later redrawn. These charts measure when a sample is decided, not realism or FID.</p>
@@ -47,6 +48,7 @@ import { withBase } from '../utils/paths';
       const response = await fetch(root.dataset.measurements!);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       runs = await response.json();
+      runs.push(JSON.parse(root.dataset.ours!) as Run);
     } catch {
       root.insertAdjacentHTML('beforeend', '<p class="instrument-note">The measurement data could not be loaded. The complete source report remains available above.</p>');
       return;

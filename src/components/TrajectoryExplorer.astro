@@ -2,18 +2,28 @@
 import catalog from '../../public/report/catalog.json';
 import { withBase } from '../utils/paths';
 
+const ours = {
+  key: 'ours_a1_ffhq64', label: 'Ours A1 · FFHQ-64', method: 'Ours',
+  meta: 'A1 D256 · EMA 146k · four cumulative frequency groups · saved run FID-50K 15.08',
+  files: { preview: 'ours/ffhq64-a1-d256/trajectory-146k.png', final: 'ours/ffhq64-a1-d256/a1-grid-146k.png' },
+  headers: ['G0', 'G0–G1', 'G0–G2', 'G0–G3'].map((step, index) => ({ step, detail: `${(index + 1) * 100} sampler calls` })),
+  width: 256, height: 512, finalCount: 64,
+  note: 'Each row follows one of eight FFHQ-64 samples. Columns are cumulative decoded frequency groups, rearranged without changing pixels from the saved A1 stage sheet. Open the separate A1 report for the matched comparisons and limitations.'
+};
+const items = [...catalog.map((item) => ({ ...item, files: Object.fromEntries(Object.entries(item.files).map(([kind, path]) => [kind, 'report/' + path])) })), ours];
 const first = catalog.find((item) => item.key === 'ffhq128_mid')!;
 const groups = [
-  { label: 'DCTdiff · CIFAR-10', items: catalog.filter((item) => item.key.startsWith('cifar10')) },
-  { label: 'DCTdiff · CelebA', items: catalog.filter((item) => item.key.startsWith('celeba64')) },
-  { label: 'DCTdiff · ImageNet-64', items: catalog.filter((item) => item.key.startsWith('imgnet64')) },
-  { label: 'DCTdiff · FFHQ / AFHQ', items: catalog.filter((item) => item.key.startsWith('ffhq') || item.key.startsWith('afhq')) },
-  { label: 'FAR · ImageNet-256', items: catalog.filter((item) => item.key.startsWith('far_')) },
-  { label: 'Other released ImageNet-256 models', items: catalog.filter((item) => item.method === 'Comparator') },
+  { label: 'Ours · FFHQ-64', items: [ours] },
+  { label: 'DCTdiff · CIFAR-10', items: items.filter((item) => item.key.startsWith('cifar10')) },
+  { label: 'DCTdiff · CelebA', items: items.filter((item) => item.key.startsWith('celeba64')) },
+  { label: 'DCTdiff · ImageNet-64', items: items.filter((item) => item.key.startsWith('imgnet64')) },
+  { label: 'DCTdiff · FFHQ / AFHQ', items: items.filter((item) => item.key.startsWith('ffhq') || item.key.startsWith('afhq')) },
+  { label: 'FAR · ImageNet-256', items: items.filter((item) => item.key.startsWith('far_')) },
+  { label: 'Other released ImageNet-256 models', items: items.filter((item) => item.method === 'Comparator') },
 ];
 ---
-<div class="instrument trajectory-instrument" data-trajectory data-catalog={JSON.stringify(catalog)} data-base={withBase('report/')}>
-  <div class="instrument-topline"><span>02 / Trajectory viewer</span><span>21 runs · 59 report images</span></div>
+<div class="instrument trajectory-instrument" data-trajectory data-catalog={JSON.stringify(items)} data-base={withBase('')}>
+  <div class="instrument-topline"><span>02 / Trajectory viewer</span><span>21 report runs + ours A1</span></div>
   <div class="trajectory-picker">
     <label for="trajectory-model">Choose a checkpoint</label>
     <select id="trajectory-model" data-trajectory-model>
@@ -22,6 +32,7 @@ const groups = [
   </div>
   <div class="trajectory-quick" aria-label="Quick examples">
     <button type="button" class="instrument-button is-active" data-trajectory-quick="ffhq128_mid" aria-pressed="true">DCTdiff · FFHQ-128</button>
+    <button type="button" class="instrument-button" data-trajectory-quick="ours_a1_ffhq64" aria-pressed="false">Ours A1 · FFHQ-64</button>
     <button type="button" class="instrument-button" data-trajectory-quick="far_huge" aria-pressed="false">FAR-H · ImageNet-256</button>
     <button type="button" class="instrument-button" data-trajectory-quick="flexvar_d24" aria-pressed="false">FlexVAR · ImageNet-256</button>
   </div>
@@ -41,11 +52,11 @@ const groups = [
     <summary data-trajectory-finals-label>View 32 additional final samples</summary>
     <img data-trajectory-final-image src={withBase('report/' + first.files.final)} alt={`${first.label}: additional final samples`} loading="lazy" />
   </details>
-  <p class="instrument-note">The strip and final grid are reproduced from the completed official-checkpoint audit. The FID values in run descriptions are published checkpoint figures, not re-measured here.</p>
+  <p class="instrument-note">The DCTdiff, FAR, and comparator strips come from the completed checkpoint audit; ours A1 comes from a separate saved FFHQ-64 run. FID labels identify each source run and do not form a controlled cross-method ranking. <a href={withBase('projects/next-frequency/')}>Read the dedicated A1 report</a>.</p>
 </div>
 
 <script>
-  type Item = { key: string; label: string; meta: string; method: string; files: Record<string, string>; headers: { step: string; detail: string }[]; width: number; height: number; note: string };
+  type Item = { key: string; label: string; meta: string; method: string; files: Record<string, string>; headers: { step: string; detail: string }[]; width: number; height: number; note: string; finalCount?: number };
   const names: Record<string, string> = { x0: 'Predicted image x̂₀', xt: 'Noisy state xₜ', pred: 'Stage prediction', ctx: 'Context passed on', preview: 'Decoded preview' };
   document.querySelectorAll<HTMLElement>('[data-trajectory]').forEach((root) => {
     const items = JSON.parse(root.dataset.catalog!) as Item[];
@@ -101,8 +112,8 @@ const groups = [
       setKind(views[0]);
       note.textContent = item.note || 'Columns are successive generation states. Rows track the same eight samples from start to final output.';
       final.src = base + item.files.final;
-      final.alt = `${item.label}: ${item.method === 'Comparator' ? 'eight' : '32 additional'} final samples`;
-      finalsLabel.textContent = `View ${item.method === 'Comparator' ? '8' : '32 additional'} final samples`;
+      final.alt = `${item.label}: ${item.method === 'Comparator' ? 'eight' : item.finalCount || 32} final samples`;
+      finalsLabel.textContent = `View ${item.method === 'Comparator' ? '8' : item.finalCount || '32 additional'} final samples`;
       finals.open = false;
       scroller.scrollLeft = 0;
       root.querySelectorAll<HTMLButtonElement>('[data-trajectory-quick]').forEach((button) => {

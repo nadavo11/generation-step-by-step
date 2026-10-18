@@ -10,7 +10,15 @@
     "stages-146k.png": "a1c9801aa36ca0b781c6e4deffc4be829fdd6d6f55a5eabc2e9547ab16b5ea6d",
     "a1-grid-146k.png": "8b38d80299b07ebed7b96475b4095fd91564898f23d20cfff3bd2152692c24a1",
     "a1-grid-100k.png": "3ff557c791c99e90ddacf3983d72b5589d9290527df72a1c79e3a2bc90c3f5f1",
-    "a0-grid-100k.png": "2f0db976552f07c8ec3eb932cee4e98a5fa170aeb2626863da9239e7cd6f45d5"
+    "a0-grid-100k.png": "2f0db976552f07c8ec3eb932cee4e98a5fa170aeb2626863da9239e7cd6f45d5",
+    "trajectory-146k.png": "c380bbc4546849c594fc0bfd7a2592698ff42a7640fdd9c32a36a9724f674a49",
+    "gallery-146k.png": "89d91ed3ec50dbc9701d1e22d7d306f11f568cc715d58c3fb3020b7971a48046"
   },
-  "note": "Hashes are SHA-256. The four-row stage sheet contains cumulative G0, G0–G1, G0–G2, G0–G3 reconstructions for eight generated samples. Browser interpolation is for display only."
+  "derivedMeasurement": {
+    "file": "spectral.json",
+    "sha256": "f03bbff84c8ca4398e79619705cb5c64f52da89876aaeacd8bcdae4db4800805",
+    "script": "scripts/build_ours_trajectory.py",
+    "method": "Same five luma FFT bands and lower median over eight samples as the streaming audit, evaluated from the saved 8-bit stage PNG against each sample's G3 image; 0.1 persistent-residual settle threshold"
+  },
+  "note": "Hashes are SHA-256. The four-row stage sheet contains cumulative G0, G0–G1, G0–G2, G0–G3 reconstructions for eight generated samples. Trajectory and gallery images only rearrange original pixels. Browser interpolation is for display only."
 }

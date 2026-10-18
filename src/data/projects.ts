@@ -1,26 +1,17 @@
 import type { Project } from '../types';
 
-// The checkpoint audit fields below come from “Generation, Step by Step.”
-// featuredResult comes from the researcher's redesign brief and is labeled separately.
+// The streaming audit fields below come from “Generation, Step by Step.”
+// The A1 entry is a separately sourced, measured addition to the trajectory views.
 export const projects: Project[] = [
   {
     slug: 'generation-step-by-step',
     title: 'Generation, Step by Step',
-    featuredResult: {
-      control: 'A0 · joint control',
-      variant: 'A1 · next-frequency',
-      training: 'CIFAR-10 · D192 · matched 100k',
-      relativeCost: '≈5%',
-      criterion: 'Pre-registered STRONG criterion satisfied',
-      caveat: 'Persistent single-token G2 checkerboard artifact in seeds 5 and 7.',
-      provenance: 'Separate CIFAR-10 D192 experiment. The linked checkpoint trajectory report does not include its exact A0/A1 FID values or the G2 artifact images.',
-    },
-    category: 'Image generation · checkpoint audit',
-    contribution: 'Next-frequency generation meets STRONG at approximately 5% FID cost in the matched CIFAR-10 experiment; FFHQ-64 samples expose its four generation stages.',
+    category: 'Image generation · trajectory audit',
+    contribution: 'A trajectory audit shows when generated images become usable previews, with ours A1 placed beside official checkpoint samples and frequency plots.',
     status: 'completed',
     verdict: 'DCTdiff settles from coarse to fine in pixel space. FAR’s carried prefix stays blurred; most mid- and high-frequency pixel detail is decided at its last stage.',
     motivation: 'A generator can expose intermediate states without providing a useful image preview. This audit decodes those states and measures how closely each frequency band matches the trajectory’s own final image.',
-    question: 'Can next-frequency generation retain near-control image quality at matched training, and when do related generators expose a usable preview?',
+    question: 'When do different generators expose a recognizable preview, and when does each pixel-frequency band settle?',
     setup: 'Eight trajectories per checkpoint. The report samples all 14 public DCTdiff and 3 FAR checkpoints with official samplers, plus one ImageNet-256 checkpoint each for D-AR, FlexVAR, VAR, and DetailFlow. Luma FFT residuals are measured against each trajectory’s final sample and summarized by the median over eight samples.',
     metrics: [
       { label: 'DCTdiff checkpoints', value: '14', context: 'Official public checkpoints sampled across five datasets.' },
@@ -28,6 +19,7 @@ export const projects: Project[] = [
       { label: 'Finest band settles', value: '70–95%', context: 'Fraction of DCTdiff’s 100 network calls; always after coarser bands.' },
     ],
     results: [
+      { comparison: 'Ours A1 cumulative preview', setting: 'FFHQ-64 · four stages · 400 calls', result: 'Coarsest 25%; finest 100%', interpretation: 'The saved 146k stage sheet yields a coarse-to-fine pixel progression; measured against each sample’s own final image.' },
       { comparison: 'DCTdiff prediction', setting: '14 checkpoints · 100 network calls', result: 'Coarsest 28–40%; finest 70–95%', interpretation: 'Pixel frequencies settle in coarse-to-fine order without an explicit ordering constraint.' },
       { comparison: 'FAR-H stage prediction', setting: '10 generation stages', result: 'Coarsest residual 0.51 at stage 2; 0.14 at stage 4', interpretation: 'Full-image predictions improve, but stages redraw details.' },
       { comparison: 'FAR carried context', setting: 'Stage 9 of 10', result: 'Residual 0.74–0.84 in the 1/16–1/4 bands', interpretation: 'The state passed forward is a blur with VAE grid ringing, not a stable partial image.' },
@@ -41,11 +33,13 @@ export const projects: Project[] = [
     ],
     interpretation: 'The trajectories measure when a generated image becomes decided, not how good it is against real data. DCTdiff’s ordering appears in decoded pixels, whereas FAR’s frequency progression is carried in VAE-latent space and its last stage makes many visible detail decisions.',
     qualitative: [
+      'Ours A1 adds frequency groups explicitly: coarse face structure appears in G0, and the G3 reconstruction carries the finest visible detail. These eight FFHQ-64 samples come from a separate saved run.',
       'DCTdiff’s predicted image develops coarse structure before fine detail. At 32² and 64², object identity is often unclear; high-resolution outputs can look smooth because high DCT coefficients are truncated.',
       'FAR stage predictions are full images, but early stages are patchy mosaics. The context actually passed between stages decodes to blur and VAE grid ringing.',
       'Among released ImageNet-256 comparators, FlexVAR and DetailFlow show recognizable subjects early; VAR starts with blurred structure; D-AR’s early denoising states are noisy.',
     ],
     caveats: [
+      'The ours A1 row is derived from eight FFHQ-64 stage-sheet samples. Its four stage positions are not equal to DCTdiff’s 100 solver calls or FAR’s 10 stages, and this plot does not compare image quality or FID.',
       'Published FID-50k values are quoted from papers or official checkpoint descriptions. This eight-sample audit did not re-measure FID, and the model figures are not a controlled ranking.',
       'The settle metric compares every intermediate state with that trajectory’s own final sample. It measures when a sample is decided, not its realism or fidelity to data.',
       'DCTdiff’s ImageNet-64 label mapping was built from an unsorted training-folder listing and was not released; its label indices cannot be treated as named standard ImageNet classes.',
@@ -62,6 +56,7 @@ export const projects: Project[] = [
       { status: 'reported', text: 'The ImageNet-256 comparator figures are published results.', evidence: 'The report cites paper and official checkpoint FIDs separately. It generated eight trajectory samples per released model, without a 50k-image FID run.' },
     ],
     figures: [
+      { src: 'ours/ffhq64-a1-d256/gallery-146k.png', alt: 'Eight FFHQ-64 A1 samples arranged in four rows of two. Each group of four columns shows cumulative G0, G0–G1, G0–G2, and G0–G3 stages.', caption: 'Ours A1 D256, FFHQ-64: two trajectories per row, four cumulative stages per trajectory. Rearranged from the saved 146k stage sheet without changing pixels; separate experiment from the public-checkpoint audit.', credit: 'Saved A1 run · eight fixed samples' },
       { src: 'report/img/ffhq128_mid_x0.jpg', alt: 'DCTdiff FFHQ-128 mid decoded predictions at successive diffusion calls, eight samples in rows.', caption: 'DCTdiff, FFHQ-128 mid: predicted images across 100 network calls. Coarse structure stabilizes before fine detail.' },
       { src: 'report/img/far_huge_pred.jpg', alt: 'FAR-H stage predictions, eight samples in rows across ten stages.', caption: 'FAR-H: each stage predicts a complete image; early predictions are patchy and later stages redraw detail.' },
       { src: 'report/img/far_huge_ctx.jpg', alt: 'FAR-H context passed to the next stage, decoded as images across ten stages.', caption: 'FAR-H carried context: the decoded prefix remains blurred with VAE grid ringing.' },
@@ -70,6 +65,6 @@ export const projects: Project[] = [
       { src: 'report/img/var_d30_preview.jpg', alt: 'VAR d30 eight ImageNet-256 trajectories across ten scales.', caption: 'VAR d30: cumulative next-scale previews reveal identity and fine detail gradually.' },
       { src: 'report/img/detailflow_preview.jpg', alt: 'DetailFlow eight ImageNet-256 trajectories across 16 token groups.', caption: 'DetailFlow: successive prefixes of a 128-token sequence; the first eight tokens reveal the broad composition.' },
     ],
-    sourceNote: 'Source: “Generation, Step by Step,” the completed checkpoint trajectory report. The full report contains all 17 DCTdiff/FAR strips, four released comparator strips, the checkpoint table, method notes, and spectral plots.',
+    sourceNote: 'Source: “Generation, Step by Step,” the completed checkpoint trajectory report, plus a separately measured FFHQ-64 A1 stage sheet. The original report contains all 17 DCTdiff/FAR strips, four released comparator strips, the checkpoint table, method notes, and spectral plots.',
   },
 ];
