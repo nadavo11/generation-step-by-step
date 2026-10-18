@@ -1,0 +1,78 @@
+---
+import { withBase } from '../utils/paths';
+
+const source = withBase('ours/ffhq64-a1-d256/stages-146k.png');
+const stages = [
+  { label: 'G0', detail: 'Coarsest frequency group' },
+  { label: 'G0–G1', detail: 'Early structure' },
+  { label: 'G0–G2', detail: 'More edges and detail' },
+  { label: 'G0–G3', detail: 'Complete generated image' },
+];
+---
+<div class="ours-explorer" data-ours-explorer data-sprite={source}>
+  <div class="ours-explorer-top"><span>Eight fixed samples / four cumulative stages</span><span>FFHQ-64 · A1 D256 · EMA · 146k</span></div>
+  <div class="ours-explorer-grid">
+    <div class="ours-sample">
+      <canvas width="256" height="256" role="img" aria-label="Selected generated FFHQ-64 face at the selected cumulative frequency stage" data-ours-canvas></canvas>
+      <div class="ours-sample-controls">
+        <button type="button" data-sample-prev aria-label="Previous sample">←</button>
+        <span data-sample-count>Sample 1 / 8</span>
+        <button type="button" data-sample-next aria-label="Next sample">→</button>
+      </div>
+    </div>
+    <div class="ours-stage-controls">
+      <span class="ours-control-label">Follow one sample</span>
+      {stages.map((stage, index) => <button type="button" data-stage={index} class:list={{ 'is-active': index === 3 }} aria-pressed={index === 3 ? 'true' : 'false'}><span>{stage.label}</span><small>{stage.detail}</small></button>)}
+      <div class="ours-upscale">
+        <span class="ours-control-label">64 → 256 px display</span>
+        <div role="group" aria-label="Display interpolation">
+          <button type="button" data-sampling="smooth" class="is-active" aria-pressed="true">Smooth 4×</button>
+          <button type="button" data-sampling="nearest" aria-pressed="false">Nearest 4×</button>
+        </div>
+        <p>Browser high-quality interpolation changes display pixels only. It adds no generated detail or super-resolution model.</p>
+      </div>
+    </div>
+  </div>
+  <figure class="ours-sheet">
+    <div class="ours-sheet-grid">
+      <div class="ours-sheet-labels">{stages.map((stage) => <span>{stage.label}</span>)}</div>
+      <img src={source} alt="Eight A1 D256 generated FFHQ-64 samples, columns, reconstructed after G0, G1, G2, and G3, rows" width="512" height="256" loading="lazy" />
+    </div>
+    <figcaption>Original 64 × 64 report samples, arranged by cumulative stage. Each column follows the same generated sample. The enlarged preview above uses only interpolation.</figcaption>
+  </figure>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-ours-explorer]').forEach((root) => {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-ours-canvas]');
+    const label = root.querySelector<HTMLElement>('[data-sample-count]');
+    if (!canvas || !label) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const sprite = new Image();
+    let stage = 3, sample = 0, smooth = true;
+    const draw = () => {
+      if (!sprite.complete || !sprite.naturalWidth) return;
+      ctx.clearRect(0, 0, 256, 256);
+      ctx.imageSmoothingEnabled = smooth;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sprite, sample * 64, stage * 64, 64, 64, 0, 0, 256, 256);
+      canvas.setAttribute('aria-label', `Sample ${sample + 1} of 8 after stage G${stage}, ${smooth ? 'smooth' : 'nearest-neighbor'} display interpolation`);
+      label.textContent = `Sample ${sample + 1} / 8`;
+    };
+    sprite.onload = draw;
+    sprite.src = root.dataset.sprite!;
+    root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((button) => button.addEventListener('click', () => {
+      stage = Number(button.dataset.stage);
+      root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((item) => { item.classList.toggle('is-active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
+      draw();
+    }));
+    root.querySelector('[data-sample-prev]')?.addEventListener('click', () => { sample = (sample + 7) % 8; draw(); });
+    root.querySelector('[data-sample-next]')?.addEventListener('click', () => { sample = (sample + 1) % 8; draw(); });
+    root.querySelectorAll<HTMLButtonElement>('[data-sampling]').forEach((button) => button.addEventListener('click', () => {
+      smooth = button.dataset.sampling === 'smooth';
+      root.querySelectorAll<HTMLButtonElement>('[data-sampling]').forEach((item) => { item.classList.toggle('is-active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
+      draw();
+    }));
+  });
+</script>

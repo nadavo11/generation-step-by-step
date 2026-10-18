@@ -1,0 +1,16 @@
+{
+  "dataset": "FFHQ-64",
+  "protocol": "Matched ~3.34 H100 hours; FID-50K versus q90 real reference pool",
+  "runs": {
+    "A1": {"id": "wqa3lin4", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/wqa3lin4", "step": 146000, "fid50k": 15.075653566587523, "samplerCalls": 400, "status": "crashed after saved evaluation"},
+    "A0": {"id": "229cfxlk", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/229cfxlk", "step": 174000, "fid50k": 18.49220439853972, "samplerCalls": 100, "status": "finished"},
+    "R0": {"id": "3aanusfn", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/3aanusfn", "step": 250000, "fid50k": 12.662719387885582, "samplerCalls": 100}
+  },
+  "images": {
+    "stages-146k.png": "a1c9801aa36ca0b781c6e4deffc4be829fdd6d6f55a5eabc2e9547ab16b5ea6d",
+    "a1-grid-146k.png": "8b38d80299b07ebed7b96475b4095fd91564898f23d20cfff3bd2152692c24a1",
+    "a1-grid-100k.png": "3ff557c791c99e90ddacf3983d72b5589d9290527df72a1c79e3a2bc90c3f5f1",
+    "a0-grid-100k.png": "2f0db976552f07c8ec3eb932cee4e98a5fa170aeb2626863da9239e7cd6f45d5"
+  },
+  "note": "Hashes are SHA-256. The four-row stage sheet contains cumulative G0, G0–G1, G0–G2, G0–G3 reconstructions for eight generated samples. Browser interpolation is for display only."
+}

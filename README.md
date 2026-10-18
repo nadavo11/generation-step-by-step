@@ -23,17 +23,17 @@ static site into `dist/`.
 
 ## Evidence rule
 
-Each project's content must come from its approved research report. Record
-completed, reported, and ongoing results separately. Put only accessible,
-report-referenced figures in `public/` and describe their provenance in the
-project's `sourceNote`.
+Each project's content must come from approved research evidence. Record
+completed, reported, and ongoing results separately. Keep figure provenance
+alongside published assets in `public/`.
 
-The first project combines two clearly labeled sources: the completed
-“Generation, Step by Step” checkpoint report in `public/report/`, and the
-researcher's redesign brief. The brief supplies the matched-100k A0/A1 STRONG
-verdict, approximately 5% relative FID cost, and the single-token G2
-checkerboard caveat in seeds 5 and 7. Exact A0/A1 FIDs and G2 images were not
-supplied, so the site does not show them. Published FIDs in the checkpoint
+The first project combines three clearly labeled sources: the completed
+“Generation, Step by Step” checkpoint report in `public/report/`; the separate
+CIFAR-10 D192 matched-100k experiment; and the FFHQ-64 D256 W&B runs. The
+CIFAR-10 experiment supplies the A0/A1 STRONG verdict, approximately 5%
+relative FID cost, and the single-token G2 checkerboard caveat in seeds 5 and
+7. Its exact FIDs and G2 images are not shown. The FFHQ-64 source manifest is
+in `public/ours/ffhq64-a1-d256/source.json`. Published FIDs in the checkpoint
 audit remain attributed to papers or official checkpoint descriptions; its
 eight-sample trajectories are not new FID measurements.
 
@@ -43,3 +43,7 @@ strips (`public/report/catalog.json`, with images under `public/report/img/`).
 The 17 DCTdiff/FAR entries drive the settle chart and residual curves; all 21
 sampled runs are available in the trajectory viewer. These archived artifacts
 are contextual evidence for streaming behavior, separate from the A0/A1 result.
+
+The A1 stage viewer crops the original 8-column × 4-row FFHQ-64 stage sheet in
+the browser. “Smooth 4×” uses browser canvas interpolation to display each
+64 × 64 sample at 256 × 256; it is not a generated super-resolution result.
