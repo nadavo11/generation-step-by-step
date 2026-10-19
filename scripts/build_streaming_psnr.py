@@ -52,9 +52,11 @@ def main():
         dataset = DATASETS.get(record['dataset'], 'ImageNet' if 'ImageNet' in record['dataset'] else record['dataset'])
         label = key.replace('_', ' ')
         if method == 'DCTdiff':
-            label = key.split('_', 1)[1].replace('_', ' ')
+            label = key.split('_', 1)[1].replace('_', ' ').replace('mid deep', 'mid-deep').replace('DPMSolver', 'DPM-Solver')
         elif method == 'FAR':
             label = key.split('_')[1].upper()[0]
+        elif method == 'D-AR':
+            label = 'XL'
         else:
             label = record['model'].split('-', 1)[-1]
         rows.append({

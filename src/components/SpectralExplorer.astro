@@ -3,7 +3,7 @@ import { withBase } from '../utils/paths';
 import ours from '../../public/ours/ffhq64-a1-d256/spectral.json';
 ---
 <div class="instrument spectral-instrument" data-spectral data-measurements={withBase('report/measurements.json')} data-ours={JSON.stringify(ours)}>
-  <div class="instrument-topline"><span>01 / Frequency settling</span><span>17 official checkpoints + ours A1 · median of 8 samples</span></div>
+  <div class="instrument-topline"><span>Frequency settling</span><span>17 official checkpoints + ours A1 · median of 8 samples</span></div>
   <div class="instrument-controls" role="group" aria-label="Frequency chart image state">
     <button type="button" class="instrument-button is-active" data-spectral-view="guess" aria-pressed="true">Prediction / preview</button>
     <button type="button" class="instrument-button" data-spectral-view="state" aria-pressed="false">Carried state</button>

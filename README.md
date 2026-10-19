@@ -70,7 +70,11 @@ The streaming PSNR instrument reads `public/streaming/psnr.json`. Regenerate it
 with `python scripts/build_streaming_psnr.py --results /path/to/prior_intermediates/results`.
 It converts the archived public-run median RGB RMSE arrays to PSNR and measures
 the four A1 stages from the native 64px saved PNG. Source SHA-256 hashes travel
-with each row. The graph facets by native resolution; its horizontal coordinate
+with each row. The graph groups runs by dataset and native resolution; its horizontal coordinate
 is each run's fraction of calls/stages, **not elapsed seconds**. The archive has
 only total batch wall time for DCTdiff/FAR and no per-stage wall times, so these
 curves do not establish a latency ranking or cross-dataset streaming superiority.
+The interactive view groups by both dataset and native pixel size, defaults to
+A1 alone on FFHQ-64, and links the highlighted curve to one saved preview and
+its own final image. The image is a visual example; the plotted value is the
+lower-median RMSE converted to PSNR over eight samples.

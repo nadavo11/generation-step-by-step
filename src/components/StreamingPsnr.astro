@@ -1,88 +1,199 @@
 ---
 import data from '../../public/streaming/psnr.json';
+import catalog from '../../public/report/catalog.json';
+import { withBase } from '../utils/paths';
+
 const runs = data.runs;
-const resolutions = [32, 64, 128, 256, 512];
-const sizes = resolutions.map((resolution) => ({ resolution, count: runs.filter((run) => run.resolution === resolution).length }));
+const cohorts = [
+  { id: 'FFHQ-64', label: 'FFHQ · 64 px', note: 'Our A1 run. This audit has no DCTdiff or FAR FFHQ-64 trajectory.' },
+  { id: 'ImageNet-256', label: 'ImageNet · 256 px', note: 'FAR and four released comparators share dataset and pixel size; models, samplers and total work differ.' },
+  { id: 'FFHQ-128', label: 'FFHQ · 128 px', note: 'Three DCTdiff checkpoint sizes on the same dataset and pixel size.' },
+  { id: 'CIFAR-10-32', label: 'CIFAR-10 · 32 px', note: 'Three DCTdiff checkpoint sizes on the same dataset and pixel size.' },
+  { id: 'CelebA-64', label: 'CelebA · 64 px', note: 'Two DCTdiff samplers on the same dataset and pixel size.' },
+  { id: 'ImageNet-64', label: 'ImageNet · 64 px', note: 'Three DCTdiff checkpoint sizes on the same dataset and pixel size.' },
+  { id: 'FFHQ-256', label: 'FFHQ · 256 px', note: 'One DCTdiff checkpoint at this dataset and pixel size.' },
+  { id: 'FFHQ-512', label: 'FFHQ · 512 px', note: 'One DCTdiff checkpoint at this dataset and pixel size.' },
+  { id: 'AFHQ-512', label: 'AFHQ · 512 px', note: 'One DCTdiff checkpoint at this dataset and pixel size.' },
+];
+const sprites = Object.fromEntries(catalog.map((item) => {
+  const view = item.method === 'DCTdiff' ? 'x0' : item.method === 'FAR' ? 'pred' : 'preview';
+  const steps = item.headers.map((header, index) => {
+    if (item.method !== 'DCTdiff') return (index + 1) / item.headers.length;
+    return header.step === 'out' ? 1 : Number(header.step.replace('#', '')) / 100;
+  });
+  return [item.key, { url: withBase('report/' + item.files[view]), fractions: steps, labels: item.headers.map((header) => header.step) }];
+}));
+sprites.ours_a1_ffhq64 = {
+  url: withBase('ours/ffhq64-a1-d256/trajectory-146k.png'),
+  fractions: [0.25, 0.5, 0.75, 1], labels: ['G0', 'G0–G1', 'G0–G2', 'G0–G3'],
+};
 ---
-<div class="psnr-instrument" data-streaming-psnr data-runs={JSON.stringify(runs)}>
-  <div class="psnr-topline"><span>02 / Full-image commitment</span><span>22 trajectories · eight samples each</span></div>
-  <div class="psnr-intro">
-    <h3>PSNR to each sample’s final image</h3>
-    <p>Higher means that the current RGB preview is closer to <em>its own</em> eventual output. This tests how early a generated image becomes stable. It does not test realism or accuracy against real images.</p>
+<div class="instrument psnr-instrument" data-streaming-psnr data-runs={JSON.stringify(runs)} data-sprites={JSON.stringify(sprites)} data-cohorts={JSON.stringify(cohorts)}>
+  <div class="instrument-topline"><span>Full-image stability</span><span>21 public runs + ours A1 · eight samples per run</span></div>
+  <div class="psnr-heading">
+    <h3>How soon does the image stop changing?</h3>
+    <p>Each line follows one generator’s previews toward <strong>that same sample’s final image</strong>. Higher PSNR means fewer pixel changes remain. It says nothing about whether the final image is good.</p>
   </div>
-  <div class="psnr-controls">
-    <label for="psnr-resolution">Native resolution</label>
-    <select id="psnr-resolution" data-psnr-resolution>
-      {sizes.map(({ resolution, count }) => <option value={resolution} selected={resolution === 64}>{resolution} × {resolution} · {count} runs</option>)}
-    </select>
-    <span class="psnr-controls-note" data-psnr-scope>FFHQ, CelebA and ImageNet at 64 px · different datasets</span>
+  <div class="psnr-axis-guide" aria-label="How to read the chart">
+    <p><span>Horizontal</span><strong>Work completed →</strong><small>Percent of each run’s calls or stages. Not seconds.</small></p>
+    <p><span>Vertical</span><strong>Closer to final ↑</strong><small>RGB PSNR in dB at the original pixel resolution.</small></p>
   </div>
-  <div class="psnr-key" data-psnr-key aria-label="Visible run legend"></div>
-  <div class="psnr-chart-scroll" role="region" aria-label="PSNR chart; horizontally scrollable on small screens" tabindex="0">
-    <svg data-psnr-chart viewBox="0 0 900 410" role="img" aria-label="PSNR to final image versus fraction of each run's sampling work"></svg>
+
+  <div class="psnr-toolbar">
+    <label for="psnr-cohort">Choose a dataset and resolution</label>
+    <select id="psnr-cohort" data-psnr-cohort>{cohorts.map((cohort) => <option value={cohort.id}>{cohort.label}</option>)}</select>
+    <p data-cohort-note aria-live="polite"></p>
   </div>
-  <p class="psnr-chart-note" data-psnr-note></p>
-  <details class="psnr-table-detail"><summary>Read values for all 22 trajectories <span aria-hidden="true">+</span></summary>
-    <div class="psnr-table-wrap"><table><thead><tr><th>Run</th><th>Dataset</th><th>Pixels</th><th>25% work</th><th>50% work</th><th>75% work</th><th>Saved views</th><th>Batch time</th></tr></thead><tbody>
-      {runs.map((run) => <tr><th scope="row">{run.method} · {run.label}</th><td>{run.dataset}</td><td>{run.resolution}²</td><td data-psnr-value={`${run.key}:0.25`}></td><td data-psnr-value={`${run.key}:0.5`}></td><td data-psnr-value={`${run.key}:0.75`}></td><td>{run.steps}</td><td>{run.total_batch_seconds == null ? '—' : `${run.total_batch_seconds.toFixed(2)} s`}</td></tr>)}
+
+  <div class="psnr-layout">
+    <div class="psnr-plot-column">
+      <div class="psnr-plot-head"><span>PSNR to own final image</span><span>Higher = fewer changes left</span></div>
+      <div class="psnr-chart-scroll" role="region" aria-label="PSNR chart; scroll sideways on a narrow screen" tabindex="0">
+        <svg data-psnr-chart viewBox="0 0 760 340" role="img" aria-label="PSNR to final image against fraction of sampling work"></svg>
+      </div>
+      <p class="psnr-endpoint">The line stops before the final image: comparing an image with itself gives ∞ PSNR.</p>
+      <div class="psnr-run-list" data-psnr-run-list role="group" aria-label="Highlight a run"></div>
+    </div>
+    <div class="psnr-readout" aria-live="polite">
+      <div class="psnr-readout-head"><span data-psnr-kind>Ours A1</span><strong data-psnr-run-name>A1 D256</strong><small data-psnr-run-setting>FFHQ · 64 × 64</small></div>
+      <div class="psnr-score"><strong data-psnr-score>28.4</strong><span>dB to final</span></div>
+      <p class="psnr-stage" data-psnr-stage>At 50% of work: G0–G1 is the current cumulative preview.</p>
+      <div class="psnr-image-pair"><figure><canvas width="128" height="128" data-psnr-preview role="img" aria-label="One generated sample at selected progress"></canvas><figcaption>One saved preview</figcaption></figure><figure><canvas width="128" height="128" data-psnr-final role="img" aria-label="Final image of the same generated sample"></canvas><figcaption>Its final image</figcaption></figure></div>
+      <p class="psnr-sample-note">Images show sample 1 of 8; the chart uses the median of eight. Display tiles may be resized.</p>
+    </div>
+  </div>
+
+  <div class="psnr-scrub">
+    <label for="psnr-progress">Inspect a point in generation <output for="psnr-progress" data-psnr-percent>50%</output></label>
+    <input id="psnr-progress" type="range" min="0" max="100" step="1" value="50" data-psnr-progress aria-label="Fraction of sampling work completed" />
+    <div><span>Start</span><span>Halfway</span><span>Final</span></div>
+  </div>
+  <p class="psnr-boundary" data-psnr-boundary><strong>Comparison boundary.</strong> <span>Ours has no matched FFHQ-64 baseline in this audit. This curve cannot show that it streams faster or produces better final images. A wall-time ranking needs per-stage timestamps on a shared device.</span></p>
+
+  <details class="psnr-detail"><summary>See all 22 trajectories and their values</summary>
+    <p>Each value is the latest measured preview available by that fraction of work. “—” means the run has not emitted a saved preview. The final self-comparison is ∞ and is omitted from the finite chart.</p>
+    <div class="psnr-table-wrap"><table><thead><tr><th>Run</th><th>Dataset</th><th>Pixels</th><th>25%</th><th>50%</th><th>75%</th><th>Views</th><th>Batch time</th></tr></thead><tbody>
+      {runs.map((run) => <tr><th scope="row">{run.method === 'Ours A1' ? 'Ours · A1 D256' : `${run.method} · ${run.label}`}</th><td>{run.dataset}</td><td>{run.resolution}²</td><td data-psnr-value={`${run.key}:0.25`}></td><td data-psnr-value={`${run.key}:0.5`}></td><td data-psnr-value={`${run.key}:0.75`}></td><td>{run.steps}</td><td>{run.total_batch_seconds == null ? '—' : `${run.total_batch_seconds.toFixed(2)} s`}</td></tr>)}
     </tbody></table></div>
   </details>
-  <div class="psnr-method">
-    <strong>How to read this comparison</strong>
-    <p>PSNR = −20 log₁₀(RMSE), with RGB values in [0,1]. Each sample’s RMSE compares a decoded stage with that same sample’s final image at native resolution; we convert the lower median RMSE of eight samples to PSNR. The archived audit measured public checkpoints before resizing its display figures. A1 is recomputed from its saved 8-bit FFHQ-64 stage sheet. Final images have zero self-error, so their PSNR is mathematically infinite and shown as “∞ final” rather than plotted on the finite scale. The vertical display caps at 45 dB.</p>
-    <p>The x-axis is <strong>fraction of that run’s sampling work</strong>: 100 network calls for DCTdiff, 10 stages for FAR, 8–16 steps for other released models, and four 100-call groups for A1. It is not seconds or equal compute. The table’s batch times are archived total times on one RTX A5000 for DCTdiff/FAR, not per-stage measurements; A1 has no matched wall-time measurement in this audit. Curves are separated by native pixel resolution, but dataset and final-image fidelity still differ. A high value can reflect a blurry final image. These data therefore cannot establish streaming superiority across methods.</p>
-    <p>A complementary measure is the frequency-band residual and persistent settle point in the graph below: it shows <em>which</em> details are stable, while PSNR aggregates all pixels. PSNR versus available budget is also used for progressive image coding; here the budget is generation work rather than bits per pixel. See <a href="https://openaccess.thecvf.com/content/WACV2025/papers/Presta_Efficient_Progressive_Image_Compression_with_Variance-Aware_Masking_WACV_2025_paper.pdf">progressive coding PSNR curves</a> and <a href="https://openreview.net/pdf?id=IhuvSLIsUN">D-AR’s streaming-preview motivation</a>.</p>
-  </div>
+  <details class="psnr-detail"><summary>Measurement method and limits</summary>
+    <p>PSNR = −20 log₁₀(RMSE). RGB pixels use [0,1]; each intermediate image is compared with its own final sample at native resolution. The public-run data are the lower median RMSE of eight samples from the archived audit, measured before display resizing. We convert those RMSE values to dB. A1 uses the same calculation on its saved 8-bit 64 px stage sheet. The final sample has zero self-error, so its PSNR is mathematically infinite and excluded from the finite curves. Display is capped at 45 dB.</p>
+    <p>The horizontal axis divides completed calls or stages by each run’s total, so equal percentages do not mean equal wall time. The archived batch times in the table are total eight-sample times on an RTX A5000 for DCTdiff and FAR, not stage times; A1 has no matched timing. A high PSNR can also reflect a smooth or blurry final image. The <a href="#instruments">frequency-band settling graph below</a> complements this aggregate metric by showing which scales have stabilized.</p>
+    <p>PSNR across progressive budgets has precedent in <a href="https://openaccess.thecvf.com/content/WACV2025/papers/Presta_Efficient_Progressive_Image_Compression_with_Variance-Aware_Masking_WACV_2025_paper.pdf">progressive image coding</a>; <a href="https://openreview.net/pdf?id=IhuvSLIsUN">D-AR</a> likewise motivates inspecting intermediate previews. Those works do not make these runs a controlled comparison.</p>
+  </details>
 </div>
 
 <script>
-  type Run = {key:string; method:string; label:string; dataset:string; resolution:number; steps:number; progress:number[]; psnr:(number|null)[]};
-  const NS = 'http://www.w3.org/2000/svg';
-  const colors: Record<string,string> = {'Ours A1':'#ba412b','DCTdiff':'#52746d','FAR':'#635c8f','D-AR':'#a8783b','FlexVAR':'#557199','VAR':'#90735f','DetailFlow':'#728c53'};
-  const make = (tag:string, attrs:Record<string,string|number>, parent:Element) => {const n=document.createElementNS(NS,tag); for(const [k,v] of Object.entries(attrs)) n.setAttribute(k,String(v));parent.appendChild(n);return n;};
-  document.querySelectorAll<HTMLElement>('[data-streaming-psnr]').forEach(root => {
+  type Run = {key:string;method:string;label:string;dataset:string;resolution:number;steps:number;progress:number[];psnr:(number|null)[]};
+  type Sprite = {url:string;fractions:number[];labels:string[]};
+  type Cohort = {id:string;label:string;note:string};
+  const NS='http://www.w3.org/2000/svg';
+  const svg=(tag:string,attrs:Record<string,string|number>,parent:Element)=>{const el=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));parent.appendChild(el);return el;};
+  document.querySelectorAll<HTMLElement>('[data-streaming-psnr]').forEach(root=>{
     const runs=JSON.parse(root.dataset.runs!) as Run[];
-    const select=root.querySelector<HTMLSelectElement>('[data-psnr-resolution]')!;
-    const chart=root.querySelector<SVGSVGElement>('[data-psnr-chart]')!;
-    const legend=root.querySelector<HTMLElement>('[data-psnr-key]')!;
-    const note=root.querySelector<HTMLElement>('[data-psnr-note]')!;
-    const scope=root.querySelector<HTMLElement>('[data-psnr-scope]')!;
-    const closest=(r:Run,p:number) => {let i=-1;r.progress.forEach((x,k)=>{if(x<=p+1e-9)i=k});return i<0?'—':r.psnr[i]===null?'∞':r.psnr[i]!.toFixed(1)+' dB';};
-    root.querySelectorAll<HTMLElement>('[data-psnr-value]').forEach(cell=>{const [key,p]=cell.dataset.psnrValue!.split(':');cell.textContent=closest(runs.find(r=>r.key===key)!,Number(p));});
-    const draw=()=>{
-      const resolution=Number(select.value), visible=runs.filter(r=>r.resolution===resolution);
-      const datasets=[...new Set(visible.map(r=>r.dataset))];
-      scope.textContent=`${datasets.join(', ')} at ${resolution} px${datasets.length>1?' · different datasets':''}`;
-      legend.replaceChildren(); chart.replaceChildren();
-      const left=65,right=35,top=30,bottom=53,W=900,H=410;
-      const x=(p:number)=>left+p*(W-left-right), y=(p:number)=>top+(45-Math.max(10,Math.min(45,p)))/(45-10)*(H-top-bottom);
-      for(const db of [10,15,20,25,30,35,40,45]){make('line',{x1:left,x2:W-right,y1:y(db),y2:y(db),stroke:'#dedbd3'},chart);make('text',{x:left-11,y:y(db)+4,'text-anchor':'end',fill:'#68665e','font-size':12},chart).textContent=String(db);}
-      for(const t of [0,.25,.5,.75,1]){make('line',{x1:x(t),x2:x(t),y1:top,y2:H-bottom,stroke:'#eae8e1'},chart);make('text',{x:x(t),y:H-23,'text-anchor':'middle',fill:'#68665e','font-size':12},chart).textContent=`${t*100}%`;}
-      make('text',{x:left,y:16,fill:'#68665e','font-size':12},chart).textContent='PSNR to own final (dB)';
-      make('text',{x:W/2,y:H-3,'text-anchor':'middle',fill:'#68665e','font-size':12},chart).textContent='Fraction of each run’s sampling work · not elapsed time';
-      make('text',{x:x(1)-4,y:top-8,'text-anchor':'end',fill:'#68665e','font-size':12},chart).textContent='∞ final';
-      visible.forEach((r)=>{
-        const swatch=document.createElement('span');swatch.className='psnr-legend-item';
-        const dot=document.createElement('i');dot.style.background=colors[r.method]||'#777';
-        swatch.append(dot,document.createTextNode(`${r.method} · ${r.label} · ${r.dataset}`));legend.appendChild(swatch);
-        const points=r.psnr.map((p,j)=>({p,x:x(r.progress[j]),y:p===null?null:y(p)}));
-        const path=make('polyline',{points:points.filter(v=>v.y!==null).map(v=>`${v.x.toFixed(1)},${v.y!.toFixed(1)}`).join(' '),fill:'none',stroke:colors[r.method]||'#777','stroke-width':r.method==='Ours A1'?3.4:2.3,'stroke-linecap':'round','stroke-linejoin':'round'},chart);
-        make('title',{},path).textContent=`${r.method} ${r.label}: ${r.dataset} ${resolution}px, ${r.steps} saved views`;
-        for(const j of [0,Math.floor((r.steps-1)/2),r.steps-1]){const p=points[j];if(p.y===null)continue;const dot=make('circle',{cx:p.x,cy:p.y,r:r.method==='Ours A1'?5:3.5,fill:colors[r.method]||'#777'},chart);make('title',{},dot).textContent=`${r.method} ${r.label} · ${Math.round(r.progress[j]*100)}% work · ${r.psnr[j]!.toFixed(2)} dB`;}
-      });
-      note.textContent=resolution===64?'The A1 curve is FFHQ-64; the other 64px runs use CelebA or ImageNet. Their numerical heights are descriptive and cannot rank methods across datasets.':'Curves in this panel share pixel count but may differ in dataset, model, sampler, and final-image quality. Endpoints are self-comparisons (∞).';
+    const sprites=JSON.parse(root.dataset.sprites!) as Record<string,Sprite>;
+    const cohorts=JSON.parse(root.dataset.cohorts!) as Cohort[];
+    const cohort=root.querySelector<HTMLSelectElement>('[data-psnr-cohort]')!;
+    const slider=root.querySelector<HTMLInputElement>('[data-psnr-progress]')!;
+    const plot=root.querySelector<SVGSVGElement>('[data-psnr-chart]')!;
+    const list=root.querySelector<HTMLElement>('[data-psnr-run-list]')!;
+    const preview=root.querySelector<HTMLCanvasElement>('[data-psnr-preview]')!;
+    const final=root.querySelector<HTMLCanvasElement>('[data-psnr-final]')!;
+    const images=new Map<string,HTMLImageElement>();
+    let focus='ours_a1_ffhq64';
+    const cohortId=(r:Run)=>`${r.dataset}-${r.resolution}`;
+    const visible=()=>runs.filter(r=>cohortId(r)===cohort.value);
+    const text=(selector:string,value:string)=>{root.querySelector<HTMLElement>(selector)!.textContent=value;};
+    const lastIndex=(values:number[],fraction:number)=>{let k=-1;values.forEach((p,i)=>{if(p<=fraction+1e-9)k=i});return k;};
+    const displayName=(r:Run)=>r.method==='Ours A1'?'Ours · A1 D256':`${r.method} · ${r.label}`;
+    const color=(r:Run)=>r.method==='Ours A1'?'#b5c9a7':'#a9b0aa';
+    const x=(p:number)=>54+p*678;
+    const y=(db:number)=>20+(45-Math.max(5,Math.min(45,db)))*6.55;
+    const setCanvas=(canvas:HTMLCanvasElement,r:Run,frame:number)=>{
+      const ctx=canvas.getContext('2d');if(!ctx)return;
+      ctx.clearRect(0,0,128,128);
+      if(frame<0){canvas.setAttribute('aria-label','No saved preview at this point');return;}
+      const im=images.get(r.key);if(!im?.naturalWidth)return;
+      const sprite=sprites[r.key];const size=im.naturalWidth/sprite.labels.length;
+      const row=im.naturalHeight/8;
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      ctx.drawImage(im,frame*size,0,size,row,0,0,128,128);
+      canvas.setAttribute('aria-label',`${displayName(r)}, sample 1, ${sprite.labels[frame]}`);
     };
-    select.addEventListener('change',draw);draw();
+    const draw=()=>{
+      const current=visible();if(!current.length)return;
+      const selected=current.find(r=>r.key===focus)??current[0];focus=selected.key;
+      const fraction=Number(slider.value)/100;
+      text('[data-psnr-percent]',`${slider.value}%`);
+      text('[data-cohort-note]',cohorts.find(c=>c.id===cohort.value)!.note);
+      text('[data-psnr-boundary] span',cohort.value==='FFHQ-64'?'Ours has no matched FFHQ-64 baseline in this audit. This curve cannot show that it streams faster or produces better final images. A wall-time ranking needs per-stage timestamps on a shared device.':'These runs share dataset and pixel size, but model, sampler, compute and final-image quality differ. PSNR to each run’s own final image does not rank realism or speed. A wall-time ranking needs per-stage timestamps on a shared device.');
+      list.replaceChildren();
+      current.forEach(r=>{
+        const button=document.createElement('button');button.type='button';button.className='psnr-run-button'+(r.key===focus?' is-active':'');
+        button.setAttribute('aria-pressed',String(r.key===focus));
+        const swatch=document.createElement('i');swatch.style.background=r.key===focus?color(r):'#6e7972';
+        const name=document.createElement('span');name.textContent=displayName(r);
+        const value=document.createElement('strong');const index=lastIndex(r.progress,fraction);value.textContent=index<0?'no preview':r.psnr[index]===null?'final':`${r.psnr[index]!.toFixed(1)} dB`;
+        button.append(swatch,name,value);button.addEventListener('click',()=>{focus=r.key;draw()});list.append(button);
+      });
+      plot.replaceChildren();
+      for(const db of [5,10,15,20,25,30,35,40,45]){
+        svg('line',{x1:54,x2:732,y1:y(db),y2:y(db),stroke:'#3b4340'},plot);
+        svg('text',{x:42,y:y(db)+4,'text-anchor':'end',fill:'#919b95','font-size':11},plot).textContent=String(db);
+      }
+      for(const fractionMark of [0,.25,.5,.75,1]){
+        svg('line',{x1:x(fractionMark),x2:x(fractionMark),y1:20,y2:282,stroke:'#343c38'},plot);
+        svg('text',{x:x(fractionMark),y:313,'text-anchor':'middle',fill:'#919b95','font-size':11},plot).textContent=`${fractionMark*100}%`;
+      }
+      svg('text',{x:54,y:337,fill:'#919b95','font-size':10},plot).textContent='Share of this run’s calls or stages; not elapsed seconds';
+      current.filter(r=>r.key!==focus).concat(selected).forEach(r=>{
+        const points=r.psnr.map((value,i)=>value===null?null:[x(r.progress[i]),y(value)]).filter((v):v is number[]=>v!==null);
+        if(points.length){
+          const path=svg('polyline',{points:points.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' '),fill:'none',stroke:color(r),'stroke-width':r.key===focus?3.2:1.5,opacity:r.key===focus?1:.42,'stroke-linecap':'round','stroke-linejoin':'round'},plot);
+          svg('title',{},path).textContent=`${displayName(r)} · ${r.dataset} ${r.resolution}px`;
+        }
+        const index=lastIndex(r.progress,fraction);
+        if(index>=0&&r.psnr[index]!==null){
+          const dot=svg('circle',{cx:x(r.progress[index]),cy:y(r.psnr[index]!),r:r.key===focus?6:3,fill:color(r),opacity:r.key===focus?1:.6,stroke:'#222626','stroke-width':2},plot);
+          svg('title',{},dot).textContent=`${displayName(r)}: ${r.psnr[index]!.toFixed(1)} dB at ${Math.round(r.progress[index]*100)}% work`;
+        }
+      });
+      svg('line',{x1:x(fraction),x2:x(fraction),y1:20,y2:282,stroke:'#b5c9a7','stroke-dasharray':'4 5',opacity:.8},plot);
+      text('[data-psnr-kind]',selected.method==='Ours A1'?'Our method':selected.method);
+      text('[data-psnr-run-name]',displayName(selected));
+      text('[data-psnr-run-setting]',`${selected.dataset} · ${selected.resolution} × ${selected.resolution} pixels`);
+      const index=lastIndex(selected.progress,fraction);
+      text('[data-psnr-score]',index<0?'—':selected.psnr[index]===null?'∞':selected.psnr[index]!.toFixed(1));
+      root.querySelector<HTMLElement>('.psnr-score span')!.textContent=index<0?'no preview yet':selected.psnr[index]===null?'final equals itself':'dB to final';
+      const sprite=sprites[selected.key];let frame=lastIndex(sprite.fractions,fraction);
+      if(selected.method==='DCTdiff'&&frame===sprite.labels.length-1)frame--;
+      const work=selected.method==='Ours A1'?'400 calls across four groups':selected.method==='DCTdiff'?'100 network calls':`${selected.steps} generation stages`;
+      const stage=selected.method==='Ours A1'?sprite.labels[index]:selected.method==='DCTdiff'?`call ${index+1}`:`stage ${index+1}`;
+      text('[data-psnr-stage]',index<0?`At ${slider.value}% of work, this run has no saved preview yet.`:`At ${slider.value}% of ${work}, the metric uses ${stage}${frame>=0?`; the example shows saved view ${sprite.labels[frame]}.`:'.'}`);
+      setCanvas(preview,selected,frame);
+      setCanvas(final,selected,sprite.labels.length-1);
+    };
+    for(const r of runs){const image=new Image();image.onload=draw;image.src=sprites[r.key].url;images.set(r.key,image);}
+    cohort.addEventListener('change',()=>{focus=visible()[0]?.key??focus;draw()});
+    slider.addEventListener('input',draw);
+    root.querySelectorAll<HTMLElement>('[data-psnr-value]').forEach(cell=>{const [key,p]=cell.dataset.psnrValue!.split(':');const r=runs.find(item=>item.key===key)!;const index=lastIndex(r.progress,Number(p));cell.textContent=index<0?'—':r.psnr[index]===null?'∞':`${r.psnr[index]!.toFixed(1)} dB`;});
+    draw();
   });
 </script>
 
 <style>
-.psnr-instrument{--line:#d8d6cf;--muted:#56534d;--ink:#24231f;--bg:#fff;border:1px solid var(--line);background:#f8f7f3;padding:clamp(20px,3vw,34px);margin:30px 0 44px;color:var(--ink)}
-.psnr-topline{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:13px;font:11px var(--mono,monospace);text-transform:uppercase;letter-spacing:.08em;color:var(--muted,#666)}
-.psnr-intro{max-width:740px;margin:26px 0 22px}.psnr-intro h3{font-size:clamp(23px,3vw,34px);margin:0 0 9px}.psnr-intro p,.psnr-method p{line-height:1.58;margin:0 0 12px;color:var(--muted,#555)}
-.psnr-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:18px 0}.psnr-controls label{font-weight:650}.psnr-controls select{border:1px solid var(--line);background:var(--bg,#fff);color:inherit;padding:9px 12px;font:inherit;max-width:100%}.psnr-controls-note{font-size:13px;color:var(--muted,#666)}
-.psnr-key{display:flex;flex-wrap:wrap;gap:8px 19px;margin:16px 0}.psnr-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:12px}.psnr-legend-item i{width:10px;height:10px;display:inline-block;border-radius:50%}
-.psnr-chart-scroll{overflow-x:auto}.psnr-chart-scroll svg{display:block;width:100%;min-width:600px;height:auto}.psnr-chart-note{font-size:13px;line-height:1.5;color:var(--muted,#555);margin:12px 0 24px}
-.psnr-table-detail{border-top:1px solid var(--line);padding-top:16px}.psnr-table-detail summary{cursor:pointer;font-weight:650}.psnr-table-wrap{overflow-x:auto;margin:18px 0}.psnr-table-wrap table{border-collapse:collapse;font-size:12px;width:100%;min-width:760px}.psnr-table-wrap th,.psnr-table-wrap td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}.psnr-table-wrap thead th{font-size:11px;text-transform:uppercase;letter-spacing:.05em}.psnr-method{border-top:1px solid var(--line);padding-top:20px;margin-top:22px;font-size:13px}.psnr-method strong{display:block;margin-bottom:9px}.psnr-method a{text-decoration:underline;text-underline-offset:2px}
-@media(max-width:600px){.psnr-topline{flex-direction:column}.psnr-instrument{padding:17px}}
+.psnr-instrument{margin-top:72px}.psnr-heading{max-width:770px;margin:0 0 31px}.psnr-heading h3{font:400 clamp(29px,3.6vw,42px)/1.08 var(--serif);letter-spacing:-.025em;margin:0 0 13px}.psnr-heading p{color:var(--muted);font-size:15px;line-height:1.6;margin:0}.psnr-heading strong{color:var(--text);font-weight:500}
+.psnr-axis-guide{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:29px}.psnr-axis-guide p{background:var(--bg);margin:0;padding:16px 19px;display:grid;gap:3px}.psnr-axis-guide span{font:10px var(--mono);color:var(--accent)}.psnr-axis-guide strong{font-size:14px;font-weight:500}.psnr-axis-guide small{font-size:12px;color:var(--quiet);line-height:1.4}
+.psnr-toolbar{display:grid;grid-template-columns:170px minmax(180px,260px) 1fr;align-items:center;gap:16px;border-block:1px solid var(--line);padding:16px 0;margin-bottom:24px}.psnr-toolbar label{color:var(--muted);font:11px/1.4 var(--mono)}.psnr-toolbar select{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);padding:11px 13px;font:13px var(--mono)}.psnr-toolbar p{margin:0;color:var(--quiet);font-size:12px;line-height:1.45}
+.psnr-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(225px,270px);gap:18px;align-items:start}.psnr-plot-column,.psnr-readout{min-width:0;background:var(--surface);border:1px solid var(--line)}.psnr-plot-column{padding:16px 15px 12px}.psnr-plot-head{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font:10px var(--mono)}.psnr-plot-head span:last-child{color:var(--quiet)}.psnr-chart-scroll{overflow-x:auto;scrollbar-color:var(--accent-dark) var(--surface)}.psnr-chart-scroll svg{display:block;width:100%;min-width:590px;height:auto;font-family:var(--mono)}.psnr-endpoint{margin:0 0 12px;color:var(--quiet);font-size:11px;line-height:1.45}.psnr-run-list{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line);padding-top:14px}.psnr-run-button{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--quiet);border:1px solid var(--line);padding:8px 10px;cursor:pointer;font:10px var(--mono)}.psnr-run-button.is-active{color:var(--text);border-color:var(--accent-dark);background:var(--raised)}.psnr-run-button:hover{border-color:var(--accent)}.psnr-run-button i{width:8px;height:8px;border-radius:50%;display:block;flex:none}.psnr-run-button strong{color:var(--accent);font-weight:400;margin-left:4px}
+.psnr-run-list :global(.psnr-run-button){display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--quiet);border:1px solid var(--line);padding:8px 10px;cursor:pointer;font:10px var(--mono)}
+.psnr-run-list :global(.psnr-run-button.is-active){color:var(--text);border-color:var(--accent-dark);background:var(--raised)}
+.psnr-run-list :global(.psnr-run-button:hover){border-color:var(--accent)}
+.psnr-run-list :global(.psnr-run-button i){width:8px;height:8px;border-radius:50%;display:block;flex:none}
+.psnr-run-list :global(.psnr-run-button strong){color:var(--accent);font-weight:400;margin-left:4px}
+.psnr-readout{padding:19px;display:flex;flex-direction:column}.psnr-readout-head{display:grid;gap:5px;border-bottom:1px solid var(--line);padding-bottom:15px}.psnr-readout-head span{color:var(--accent);font:10px var(--mono)}.psnr-readout-head strong{font:24px var(--serif);font-weight:400}.psnr-readout-head small{color:var(--quiet);font:10px var(--mono)}.psnr-score{display:flex;align-items:baseline;gap:9px;margin:21px 0 6px}.psnr-score strong{font:400 60px/.9 var(--serif);color:var(--accent);letter-spacing:-.04em}.psnr-score span{font-size:11px;color:var(--muted)}.psnr-stage{color:var(--muted);font-size:12px;line-height:1.5;min-height:54px;margin:10px 0 18px}.psnr-image-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}.psnr-image-pair figure{margin:0;min-width:0}.psnr-image-pair canvas{display:block;width:100%;aspect-ratio:1;height:auto;background:var(--raised);border:1px solid var(--line)}.psnr-image-pair figcaption{color:var(--muted);font:10px var(--mono);margin-top:7px}.psnr-sample-note{color:var(--quiet);font-size:10px;line-height:1.5;margin:13px 0 0}
+.psnr-scrub{border-bottom:1px solid var(--line);padding:22px 0 18px}.psnr-scrub label{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font:11px var(--mono)}.psnr-scrub output{color:var(--accent)}.psnr-scrub input{width:100%;display:block;accent-color:var(--accent);cursor:pointer;margin:13px 0 6px}.psnr-scrub>div{display:flex;justify-content:space-between;color:var(--quiet);font:10px var(--mono)}
+.psnr-boundary{border-left:2px solid var(--accent-dark);padding-left:17px;color:var(--muted);font-size:13px;line-height:1.55;margin:23px 0 31px}.psnr-boundary strong{color:var(--text);font-weight:500}.psnr-detail{border-top:1px solid var(--line);padding:14px 0}.psnr-detail summary{cursor:pointer;color:var(--text);font:13px var(--mono)}.psnr-detail p{color:var(--muted);font-size:12px;line-height:1.6;max-width:770px}.psnr-detail a{color:var(--accent);text-underline-offset:3px}.psnr-table-wrap{overflow-x:auto;margin-top:18px}.psnr-table-wrap table{border-collapse:collapse;min-width:760px;width:100%;font-size:11px}.psnr-table-wrap th,.psnr-table-wrap td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}.psnr-table-wrap thead th{color:var(--quiet);font-weight:400;font-family:var(--mono)}.psnr-table-wrap tbody th{font-weight:500}
+@media(max-width:900px){.psnr-layout{grid-template-columns:1fr}.psnr-readout{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}.psnr-readout-head{grid-column:1/-1}.psnr-score,.psnr-stage{grid-column:1}.psnr-image-pair{grid-column:2;grid-row:2/4;max-width:260px}.psnr-sample-note{grid-column:2}}
+@media(max-width:650px){.psnr-axis-guide{grid-template-columns:1fr}.psnr-toolbar{grid-template-columns:1fr;gap:9px}.psnr-layout{gap:11px}.psnr-readout{display:flex}.psnr-image-pair{max-width:270px;margin-top:0}.psnr-chart-scroll svg{min-width:560px}.psnr-plot-head{flex-direction:column}.psnr-run-button{max-width:100%}}
 </style>
