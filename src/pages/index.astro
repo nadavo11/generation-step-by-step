@@ -1,26 +1,60 @@
 ---
 import Base from '../layouts/Base.astro';
 import { withBase } from '../utils/paths';
+import { updates } from '../data/site';
+const fmt = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base title="Research projects" description="Generation trajectory evidence and our next-frequency research, presented as separate reports.">
+<Base title="Generation studies" description="Our next-frequency image generator and a streaming audit of how released generators take shape, with results, decks and sources." section="home">
   <div class="home-shell shell">
-    <section class="home-hero">
-      <p class="section-overline">Research collection / two reports</p>
+    <section class="home-intro">
+      <p class="section-overline">Generation studies</p>
       <h1>How images <em>take shape.</em></h1>
-      <p>Explore generation trajectories across released models, then inspect our next-frequency method, samples and matched experiments in its own report.</p>
-      <a class="text-link" href="#projects">Explore the reports <span aria-hidden="true">↓</span></a>
+      <p>Two projects on the order in which generative models decide an image: our own frequency-autoregressive generator, and an audit of the intermediate states of released models.</p>
     </section>
-    <section id="projects" class="home-projects">
-      <div class="home-section-top"><h2>Reports</h2><span>02 / generation research</span></div>
-      <article class="home-feature">
-        <a class="home-feature-visual" href={withBase('projects/generation-step-by-step/')} aria-label="Open the streaming trajectory report"><img src={withBase('report/img/ffhq128_mid_x0.jpg')} alt="DCTdiff FFHQ-128 generation progression across sampling calls" loading="lazy" /><span>Streaming trajectory audit / 21 public runs + ours A1</span></a>
-        <div class="home-feature-copy"><p class="section-overline">01 / Comparative audit</p><h3><a href={withBase('projects/generation-step-by-step/')}>Generation, Step by Step</a></h3><p>Follow eight fixed samples per run. Our A1 FFHQ-64 progression now sits alongside DCTdiff, FAR and other released models in the same figure rail, graph and trajectory viewer.</p><a class="text-link" href={withBase('projects/generation-step-by-step/')}>Explore trajectories <span aria-hidden="true">↗</span></a></div>
+
+    <section class="home-cards" aria-label="Projects">
+      <article class="home-card">
+        <a class="home-card-visual" href={withBase('projects/next-frequency/')} tabindex="-1" aria-hidden="true"><img src={withBase('decks/next-frequency-2026-10-19/figures/a1-250k-unipc-grid.png')} alt="" loading="lazy" /></a>
+        <div class="home-card-body">
+          <div class="home-card-meta"><span class="status status-ongoing">Active</span><span>Updated 19 Oct 2026</span></div>
+          <h2><a href={withBase('projects/next-frequency/')}>Next-frequency generation</a></h2>
+          <p>Ours. Generates an image low → high frequency, one group of block-DCT coefficients at a time, each group as a whole spatial field.</p>
+          <dl class="home-facts">
+            <div><dt>FFHQ-64 FID-50K</dt><dd>9.46 <small>vs DCTdiff 8.68</small></dd></div>
+            <div><dt>Parameters</dt><dd>11.1M <small>vs 44.2M</small></dd></div>
+          </dl>
+          <div class="home-links">
+            <a class="text-link" href={withBase('projects/next-frequency/')}>Overview and results <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href={withBase('projects/next-frequency/deck/')}>Lab deck <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
       </article>
-      <article class="home-feature">
-        <a class="home-feature-visual" href={withBase('projects/next-frequency/')} aria-label="Open our next-frequency report"><img src={withBase('ours/ffhq64-a1-d256/a1-grid-146k.png')} alt="A1 D256 FFHQ-64 generated sample grid at 146k steps" loading="lazy" /><span>Our method / A1 next-frequency</span></a>
-        <div class="home-feature-copy"><p class="section-overline">02 / Our method</p><h3><a href={withBase('projects/next-frequency/')}>Next-frequency generation</a></h3><p>The four-stage generator, its saved FFHQ-64 samples, matched-compute evaluation, and the separate CIFAR-10 STRONG result with its G2 checkerboard caveat.</p><div class="home-result"><strong>≈5%</strong><span>CIFAR-10 D192 · relative FID cost at matched 100k<br />pre-registered STRONG criterion met</span></div><a class="text-link" href={withBase('projects/next-frequency/')}>Read our report <span aria-hidden="true">↗</span></a></div>
+      <article class="home-card">
+        <a class="home-card-visual" href={withBase('projects/generation-step-by-step/')} tabindex="-1" aria-hidden="true"><img src={withBase('report/img/ffhq128_mid_x0.jpg')} alt="" loading="lazy" /></a>
+        <div class="home-card-body">
+          <div class="home-card-meta"><span class="status status-completed">Completed</span><span>Trajectory audit</span></div>
+          <h2><a href={withBase('projects/generation-step-by-step/')}>Generation, step by step</a></h2>
+          <p>When does an intermediate state become a usable image? Eight fixed samples per run across 21 released checkpoints, with our A1 in the same views.</p>
+          <dl class="home-facts">
+            <div><dt>Released runs</dt><dd>21</dd></div>
+            <div><dt>DCTdiff finest band settles</dt><dd>70–95% <small>of calls</small></dd></div>
+          </dl>
+          <div class="home-links">
+            <a class="text-link" href={withBase('projects/generation-step-by-step/')}>Trajectory report <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href={withBase('report/')}>Source report <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
       </article>
     </section>
-    <p class="home-footnote">The CIFAR-10 and FFHQ-64 results use different models and protocols. Each report labels evidence sources and limits where its results appear.</p>
+
+    <section class="home-updates" aria-labelledby="updates-heading">
+      <h2 id="updates-heading">Latest</h2>
+      <ol>
+        {updates.map((u) => (
+          <li><time datetime={u.date}>{fmt(u.date)}</time><span class="home-update-label">{u.label}</span><a href={withBase(u.href)}>{u.text}</a></li>
+        ))}
+      </ol>
+    </section>
+    <p class="home-footnote">The two projects use different models, datasets and protocols. Each page states its evidence source and limits next to the result.</p>
   </div>
 </Base>

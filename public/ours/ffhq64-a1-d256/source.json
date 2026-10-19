@@ -2,7 +2,7 @@
   "dataset": "FFHQ-64",
   "protocol": "Matched ~3.34 H100 hours; FID-50K versus q90 real reference pool",
   "runs": {
-    "A1": {"id": "wqa3lin4", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/wqa3lin4", "step": 146000, "fid50k": 15.075653566587523, "samplerCalls": 400, "status": "crashed after saved evaluation"},
+    "A1": {"id": "wqa3lin4", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/wqa3lin4", "step": 146000, "fid50k": 15.075653566587523, "samplerCalls": 400, "status": "146k assets saved here; the run was later resumed to 250k (FID-50K 13.69 Euler, 9.46 UniPC) — see decks/next-frequency-2026-10-19/"},
     "A0": {"id": "229cfxlk", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/229cfxlk", "step": 174000, "fid50k": 18.49220439853972, "samplerCalls": 100, "status": "finished"},
     "R0": {"id": "3aanusfn", "url": "https://forge.coreweave.com/wandb/nadavoteam/dctdiff-ffhq64/runs/3aanusfn", "step": 250000, "fid50k": 12.662719387885582, "samplerCalls": 100}
   },

@@ -1,0 +1,205 @@
+{
+ "id": "next-frequency-2026-10-19",
+ "date": "2026-10-19",
+ "title": "Frequency-autoregressive image generation: what have we learned?",
+ "occasion": "Lab discussion with Prof. Shai Avidan",
+ "mainSlides": 15,
+ "files": {
+  "pdf": {
+   "path": "decks/next-frequency-2026-10-19/frequency_ar_shai_deck.pdf",
+   "bytes": 3496658
+  },
+  "pptx": {
+   "path": "decks/next-frequency-2026-10-19/frequency_ar_shai_deck.pptx",
+   "bytes": 3296601
+  },
+  "summary": {
+   "path": "decks/next-frequency-2026-10-19/executive_summary.pdf",
+   "bytes": 177700
+  }
+ },
+ "slides": [
+  {
+   "n": 1,
+   "title": "Frequency-AR image generation: what have we learned?",
+   "kicker": "EXECUTIVE SUMMARY  ·  FFHQ-64  ·  STATUS 19 OCT 2026",
+   "notes": "Purpose: a one-slide state of the project.\r\nClaim: on FFHQ-64, our frequency-autoregressive model A1 (11.1M parameters) reaches FID-50K 9.46 with recall 0.413 using a validated UniPC schedule of 46 serial network evaluations. Our own DCTdiff port R0 (44.2M) with the same solver family reaches 8.68 / 0.440 at 15 evaluations. Both are measured with the same q90 reference and EDM Inception evaluator on 50k samples.\r\nWhat is genuinely promising: 4x fewer parameters at ~1.09x the FID; on FFHQ the causal model beats its own joint control (slide 7).\r\nWhat is weak: serial depth (46 vs 15), 1.84x latency at batch 16, and 1.72x the training H100-hours to get there. The sample strip is uncurated: seed 9 shows the single-token G3 checkerboard tail artifact, which we diagnose on slide 10.\r\nLikely objection: \"the UniPC gain is just a solver\" — correct, and we applied it to R0 too; the gap persists.\r\nSources: reports/dct_causal/efficiency/phase2_verdict.json, bench.json, bench_r0.json; reports/dct_causal/efficiency/baseline.json.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-01.jpg"
+  },
+  {
+   "n": 2,
+   "title": "Why order image generation by frequency?",
+   "kicker": "MOTIVATION",
+   "notes": "Purpose: position the factorization against the two standard ones.\r\nJoint diffusion (DCTdiff, EDM...) denoises everything at a shared noise level; spectral coarse-to-fine behaviour is emergent (DCTdiff even argues diffusion is implicitly spectral AR). Spatial AR generates pixels/patches serially. Ours makes frequency the explicit causal axis: four groups of block-DCT coefficients, each generated as an entire 8x8 spatial field, conditioned on all lower groups.\r\nThe bottom row is real data, not model output: decoding a real FFHQ-64 image with only G0 gives the 16x16 luma / 8x8 chroma block means; adding G1 gives edges; G2 and G3 add detail.\r\nImportant honesty point: we do not assume frequency causality is superior. The interesting questions are whether it helps quality, conditional diversity, training efficiency or sampling efficiency. The rest of the deck answers each separately.\r\nSource: reports/dct_causal/efficiency real10k cache; lsb/dct_causal/ffhq64_eff.py lowpass convention.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-02.jpg"
+  },
+  {
+   "n": 3,
+   "title": "A1: one axial transformer, causal across frequency",
+   "kicker": "ARCHITECTURE  ·  third_party/DCTdiff/libs/axial_freqk.py  (FFHQ-64, a1_d256)",
+   "notes": "Purpose: the exact model, from the code (libs/axial_freqk.py, AxialFreqK with rep dct4x4k9; config ffhq64_exp.py:a1_d256).\r\nRepresentation: DCTdiff's own FFHQ representation ported to 64x64: YCbCr 4:2:0, 4x4 block DCT, first 9 zig-zag coefficients; one token = an 8x8-pixel area = 4 luma blocks + Cb + Cr, 6 blocks x 9 = 54 channels, 64 tokens. Groups are u+v of the zig-zag position: G0 = DC; G1 = (0,1),(1,0); G2 = (2,0),(1,1),(0,2); G3 = (0,3),(1,2),(2,1). Note (3,0) is not in the 9 retained coefficients, so G3 is not orientation-symmetric.\r\nTrunk: the state is [batch, slots, 1+64 tokens, 256]. Each block does split-head axial attention with one shared QKV: 3 spatial heads attend densely over the 65 tokens within a slot (no spatial order), 1 frequency head attends across slots at the same spatial position under the mask on the right. Training packs clean G0..G2 (teacher forcing) and noisy G0..G3 (independent t per stage) into one forward; noisy G_k sees clean G_<k and itself only, so all four conditionals are trained per example.\r\nParameter sharing: all 13 blocks, positional and time embeddings are shared across stages; only the per-stage input/output linear adapters and the stage embedding are stage-specific.\r\nSampling: an outer loop over k; for each k an inner UniPC ODE (20/10/8/8 calls) integrates the noisy field while the clean prefix's per-layer frequency-head keys/values are computed once and cached (exact: clean slots never depend on noisy slots or on t).\r\nDo not confuse: the outer autoregression is over frequency groups; the inner process is a standard diffusion ODE over one spatial field.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-03.jpg"
+  },
+  {
+   "n": 4,
+   "title": "Next-frequency generation, stage by stage (real samples)",
+   "kicker": "WHAT GENERATION LOOKS LIKE",
+   "notes": "Purpose: make \"next-frequency prediction\" concrete with genuine samples.\r\nLeft: six uncurated samples (std seeds 0-5) from A1 at 250k with the UniPC [20,10,8,8] sampler. Row 1 shows only G0 - the DC of every 4x4 block, i.e. a 16x16 luma / 8x8 chroma mosaic: it already fixes identity-level layout, pose, colour. G1 adds first-order gradients (edges), G2 and G3 add texture and sharpness.\r\nRight: what each group contributes on its own (contrast-stretched; G1-G3 have very different energies). The bar chart is the measured noise influence: re-sampling only G0's noise changes 98% of pixel variance and 99% of the Inception-feature change of a fully independent draw; G1 noise moves 31% of the features but under 3% of pixels; G3 only 12%.\r\nSo G0 decides the layout almost completely. This is why a G0 error is so consequential, and why our efficient sampler gives G0 the most solver calls.\r\nSource: decoded from /dev/shm/nadavo_dct/eff/runs/j20_10_8_8/s0_coef.pt; phase1_verdict.json noise_pixel_share / noise_feature_share.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-04.jpg"
+  },
+  {
+   "n": 5,
+   "title": "Three references isolate what frequency causality does",
+   "kicker": "EXPERIMENTAL DESIGN",
+   "notes": "Purpose: make clear which comparison answers which question.\r\nR0 is DCTdiff's official FFHQ-128 \"small\" U-ViT recipe ported to 64x64, run in our environment with our evaluator (44.2M parameters). It reproduces the authors' released CIFAR checkpoint (FID-10K 8.50 vs 8.54), so we trust the port.\r\nA0 and A1 are the same 11.09M-parameter axial network. A0 makes all four groups noisy at one shared t with bidirectional frequency attention: it is a joint diffusion model with our backbone. A1 adds the clean prefix slots, independent noise levels per stage, and the causal mask.\r\nSo A1 - A0 is the clean test of the factorization. A1 - R0 asks whether the whole package is competitive, but mixes backbone, capacity and token design.\r\nLikely objection: A1 does 1.75x A0's training FLOPs per image (31.1 vs 17.8 GFLOP) because the clean prefix is re-encoded. We therefore report matched steps, matched H100-hours and matched FLOPs separately (slide 7).\r\nEarlier designs (spatial-causal U-ViT - wrong axis; 256-token block-causal staging - 4.18x FLOPs; channel-lane causality - capacity confounded) are in appendix A5.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-05.jpg"
+  },
+  {
+   "n": 6,
+   "title": "CIFAR-10: causality looked nearly free, then plateaued",
+   "kicker": "CIFAR-10  ·  32×32, 2×2 block DCT, 3 groups",
+   "notes": "Purpose: the first evidence, including the part that went against us.\r\nOn CIFAR-10 at D192, A1 looked almost free relative to its joint control (A1/A0 = 1.05 at 100k). With the wider D256 network trained to 250k, A0 kept improving (13.99 -> 10.98) while A1 flattened near 12.8, so A0/A1 went 0.95 -> 0.83: the causal penalty grows with training. The early comparison was misleading.\r\nSingle-axis screens (all 100k, pre-registered rules): width is the only clear win; more spectral stages in the same 4x4 DCT (K3 -> K7) gave 0.95x FID at 2.06x compute; the full-image DCT with 8 bands overfit badly - each early global band has ~12 degrees of freedom per image so the next band becomes a lookup (train loss falls, held-out loss rises); a persistent Gaussian context G_-1 and stage-noise jitter were neutral.\r\nThe sample rows show the single-token checkerboard already on CIFAR (frog, car).\r\nDo not compare these FIDs with FFHQ numbers: different dataset, representation (2x2 DCT, 3 groups) and reference statistics.\r\nSource: reports/dct_causal/scaling/summary.json; narrative SCALING_SUMMARY and D256_NOTE.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-06.jpg"
+  },
+  {
+   "n": 7,
+   "title": "FFHQ-64: frequency AR beats its joint control",
+   "kicker": "FFHQ-64  ·  EQUAL TRAINING BUDGET (3.34 H100-h EACH)  ·  EULER [100]×K",
+   "notes": "Purpose: the result that made the project interesting again.\r\nProtocol (PREREG_FFHQ64.md): jpeg-ar's q90 FFHQ-64 (all 70k images), NVlabs EDM Inception FID against the q90 reference; every arm gets 3.34 H100-hours, R0's measured time to 250k. Throughput probes set A1 to 146k steps and A0 to 174k. Final checkpoints scored with FID-50K and precision/recall at n=50k; all with the original matched Euler sampler (100 calls per stage).\r\nResult: R0 12.66, A1 15.08 (1.19x R0), A0 18.49. On FFHQ the frequency-AR model beats its joint control at matched steps, matched H100-hours and recall - the reverse of CIFAR. Per training FLOP it is roughly a tie, because A1 does 1.75x A0's FLOPs per image; A1's hour advantage partly comes from better GPU utilisation.\r\nBandJoint (our older design, 122.5M parameters, different architecture and training budget) is shown only as a historical point under the same evaluator: A1 is 1.41x better with 11x fewer parameters.\r\nCaveats to say out loud: one training seed per arm; all arms short of maturity; this is not proof that low-to-high frequency order is universally better (slide 11 has the reverse-order control).",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-07.jpg"
+  },
+  {
+   "n": 8,
+   "title": "More training brought A1 close to R0, at higher cost",
+   "kicker": "FFHQ-64  ·  A1 MATURITY (BEFORE SOLVER OPTIMIZATION)",
+   "notes": "Purpose: what more training buys, and why we stopped.\r\nThe compute-matched A1 (146k) was resumed from its full state (weights, EMA, AdamW moments, scheduler) with everything frozen except the step count (PREREG_A1_FFHQ64_MATURITY.md). The pre-registered 200k gate passed; the 200k->250k leg was a weak improvement (-0.31 FID-10K). The FID-50K rule then triggered: 13.69 at 250k, 1.08x R0's 12.66.\r\nThat is quality proximity, not efficiency: it took 5.77 H100-hours (1.72x R0) and 1.77x R0's training FLOPs, and recall stays below R0 (.347 vs .375). The G3 tail outlier rate also grows with training (2.9% -> 3.6%).\r\nPanel (a) mixes nothing: all FID-10K, all Euler. Panel (b) is FID-50K only at the checkpoints where it was evaluated. FID-10K is systematically ~1.2-1.3 higher than FID-50K here, which is why we never place them on one axis.\r\nImportant framing: this was our conclusion before solver optimization - the next slide changes the sampling picture, not the training picture.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-08.jpg"
+  },
+  {
+   "n": 9,
+   "title": "UniPC: 400 → 46 evaluations, FID-50K 13.75 → 9.46",
+   "kicker": "SAMPLER  ·  SAME FROZEN A1 250k WEIGHTS, PAIRED NOISE",
+   "notes": "Purpose: the largest single improvement, stated with its fairness control.\r\nPhase 2 of the efficiency campaign kept A1's 250k weights frozen and only changed the sampler. The original Euler sampler (100 calls per stage, 400 serial calls) was both under-converged and badly allocated. Per-stage allocation curves showed G0 needs 15-20 UniPC calls (its errors amplify 3-4x into later bands) while G2/G3 tolerate 8. The winning joint schedule [20,10,8,8] = 46 calls gives FID-50K 9.46 vs 13.75 (paired seeds, -31%) and recall +0.064, at 8.0x lower batch-500 GPU-seconds and 9.3x lower batch-16 latency.\r\nThe fairness control is essential: the same UniPC applied to R0 gives FID-50K 8.68 at 15 calls (8.69 at 20). So A1/R0 stays ~1.09 and A1 remains 1.4-1.8x slower to sample. Distilling G2/G3 to 1-2 calls would save at most 12 of 46 calls and cannot close the serial-depth gap, so it was not run.\r\nLikely objection: \"you tuned A1's schedule more than R0's\" - R0 was swept over UniPC 10/15/20/30/50, with 15 and 20 confirmed on a second seed set; both give FID-50K ~8.7.\r\nSource: efficiency/phase2_verdict.json, bench.json, bench_r0.json, runs.json (f50_*).",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-09.jpg"
+  },
+  {
+   "n": 10,
+   "title": "Where A1 fails: later groups lose conditional diversity",
+   "kicker": "DIAGNOSIS  ·  A1 250k",
+   "notes": "Purpose: locate the remaining deficit, carefully distinguishing interventions from attribution.\r\n(1) G0 is the most influential group (its noise controls 98% of pixel variance and perturbations amplify 3-4x downstream) but is adequately modelled: its PCA-64 coverage matches the real-vs-real reference and spread/skill is 0.99.\r\n(2) The real-prefix oracle (an intervention): replacing G0 with the real image's coefficients drops FID-10K 14.92 -> 11.11; adding real G1 -> 7.31; G2 -> 4.13; all real -> 3.01 (the representation floor). Shares 32/32/27/9%. These are cumulative increments along one path, not additive causal attributions; and real prefixes are training images that are also in the FID reference.\r\n(3) The deficit grows with frequency and is a diversity/scale problem: with a REAL prefix, G2/G3 already have spread/skill 0.83/0.81 and energy 0.90/0.88 (under-dispersed conditionals); with the model's own prefix the coverage gap widens to -0.13/-0.22 and energy to 0.84/0.71. The pre-registered rules make H1 (conditional variance under-estimation compounding through the chain) primary, H2 (spatial capacity) marginal; H3 (exposure bias) fails its rule.\r\n(4) A zero-training probe that rescales each generated group about the data mean (alpha fitted on a separate calibration set) improves FID-10K 10.77 -> 10.50 and recall +0.015 - consistent with H1, and the motivation for the running candidate A.\r\n(5) The tail artifact: one token's G3 coefficients explode when that token's own Gaussian noise has norm beyond ~3 sigma; the network under-predicts extreme input noise at t=1, and sigma/alpha amplifies it. It is visible in ~2-3% of images but costs nothing measurable in FID (truncating the noise tail changes FID by +0.05 on CIFAR).",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-10.jpg"
+  },
+  {
+   "n": 11,
+   "title": "Only width helped clearly; finer serialization never did",
+   "kicker": "STRUCTURAL ABLATIONS",
+   "notes": "Purpose: one dashboard of the screens that changed our interpretation. Green = clear gain, grey = neutral, red = regression/negative, yellow = partial or important-but-provisional, cyan = gain that is not architectural.\r\nCIFAR (100k, pre-registered helps <= 0.90x / hurts >= 1.10x): width is the only single-axis win. Finer spectral serialization buys little at large cost. The full-image DCT construction memorises (on 50k images, early global bands carry ~12 numbers per image). Refinement by the joint model recovers ~70% of the A1->A0 gap but never beats A0.\r\nFFHQ (50k screens, canonical UniPC sampler, raw and EMA): shallower, more finely serialized (6 Euclidean rings) or less spatial (8x8 blocks, 16 tokens) variants all regress; editing earlier groups at inference through the frozen model's own loss does nothing beyond random edits.\r\nTwo FFHQ results matter most for the paper question:\r\n- Reverse order (G3 -> G2 -> G1 -> G0, same parameters, verified leakage-free) is catastrophic at 100k: FID-10K 46.8 vs 13.7 with each direction's best sampler, 48.9 vs 17.4 at equal calls (UniPC-15 per stage). Low-to-high order matters for this architecture. Caveat: the prereg requires inspecting stagewise teacher-forced losses before attributing a >2x failure purely to ordering; that write-up is pending, and other orders (e.g. interleaved) were not tested.\r\n- The variance probe is small but directional evidence for the H1 diagnosis.\r\nNewest row (evaluated 11:22 IDT today): per-group data-std preconditioning, the training-time version of the variance probe. Paired over two seed sets it improves EMA FID-10K by 11.8% and recall by +0.07-0.08, but raw-weight FID is 0.6% worse (within seed noise), so under the strict pre-registered survivor rule it is borderline. Not yet adjudicated by the campaign - present it as early evidence only.\r\nThe UniPC row is included only so the dashboard is complete; it is a sampler, not an architecture change.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-11.jpg"
+  },
+  {
+   "n": 12,
+   "title": "Our present frontier: small and close, not cheaper",
+   "kicker": "WHERE WE STAND  ·  FFHQ-64, FID-50K, BEST VALIDATED SAMPLERS",
+   "notes": "Purpose: the honest frontier, with three separately labelled axes.\r\nA (quality vs sampling GPU-seconds, isolated H100 benchmark): R0 with UniPC-15 is better and cheaper than any A1 configuration. A1's UniPC point is 1.36x R0's GPU-seconds (and 1.84x its batch-16 latency).\r\nB (quality vs training H100-hours): R0 reached 8.68 with 3.34 h; A1 needed 5.77 h for 9.46. We do not have a UniPC FID-50K for A1 at 146k (the equal-hours checkpoint), so we do not claim one.\r\nC (quality vs parameters, marker area = recall): A1 and R0 are both on the frontier - neither dominates. This is the one axis where A1 wins: 11.1M vs 44.2M parameters.\r\nI verified Pareto status only among the points plotted. A0 appears only with Euler because its UniPC result is FID-10K only (15.00, vs A1 at 250k 10.77 on the same protocol). BandJoint is a different architecture trained on A5000s; it appears only in the size plot and is clearly dominated.\r\nConclusion sentence is the requested one, and it is what the data support.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-12.jpg"
+  },
+  {
+   "n": 13,
+   "title": "Prior art: what we cannot claim to be new",
+   "kicker": "PRIOR ART  ·  ALL ENTRIES CHECKED AGAINST THE PAPER (APPENDIX A10)",
+   "notes": "Purpose: an accurate novelty map, so we do not overclaim.\r\nCategories: explicit coefficient AR (DCTransformer: quantized sparse DCT triples, one scalar per step; JPEG-LM: an LLM over JPEG bytes); joint diffusion in DCT space (DCTdiff - our R0 and our representation); groupwise sequential diffusion over frequency (GDM); frequency/scale-level AR with tokenizers (FAR-Yu with continuous latents and a per-token diffusion MLP; NFIG with frequency-guided residual VQ; SpectralAR with nested spectral tokens; VAR with scales); continuous-token AR with non-diffusion heads (GIVT GMM, JetFormer flow+GMM, MAR diffusion MLP); multi-scale conditional flows (Wavelet Flow).\r\nWhat we cannot claim: frequency-ordered AR, per-stage diffusion over frequency groups, DCT diffusion, or the solver.\r\nWhat might be defensible, if supported by controls: making frequency an explicit causal axis inside one axial network with an exact prefix cache, and generating each group as a jointly modelled spatial field (FAR-Yu and MAR use per-token heads; Nash is per-scalar). The reverse-order result and the measured per-band evaluation allocation are candidate findings, not yet mechanisms.\r\nMissing: a written-up order mechanism, any frontier win against optimized DCTdiff, the F1 diffusion-free result, and a second dataset/resolution.\r\nAll rows were checked against the papers (links in appendix A10).",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-13.jpg"
+  },
+  {
+   "n": 14,
+   "title": "Next experiments, and what each outcome would imply",
+   "kicker": "NEXT EXPERIMENTS  ·  PREREG_DIFFPP.md (18 H100-h CEILING)",
+   "notes": "Purpose: what we will run, its status, and how outcomes map to claims.\r\nA (order): completed as a 100k screen - reverse order is catastrophic, recall collapses to 0.055. Remaining: the pre-registered inspection of stagewise teacher-forced losses before we attribute the failure purely to order; an interleaved order would make the claim sharper.\r\nB (diffusion-free head): the prior-art audit chose a conditional affine-coupling flow over each whole field (GMM-per-location discards within-field spatial dependence; MaskGIT needs quantization). All seven pre-training gates pass (round trip 1.3e-5, exact log-det, synthetic density gap 0.007 nats/dim, zero leakage, spatially coupled samples). The 50k pilot is queued, not run.\r\nC (coefficient-plane K=9): authorized only. Our own evidence (CIFAR K7 neutral at 2x compute; FFHQ 6-ring K6 -42% raw FID) makes a positive outcome unlikely; if run, generator family is held fixed so granularity is the only change.\r\nD (late-group dispersion): candidate A (per-stage data-std preconditioning, motivated by the H1 diagnosis and the variance probe) finished its 50k pilot this morning. Paired FID-10K (mean of std and 31M seeds) vs the A1 50k control: EMA 28.81 -> 25.41 (-11.8%), raw 26.80 -> 26.96 (+0.6%, within ~0.2 seed noise); recall +0.077 (EMA) / +0.070 (raw). Strictly, the FID clause fails on raw and the recall clause needs 'FID not worse', which raw misses by 0.16 - borderline. The campaign has not adjudicated it; I report it as early and unadjudicated. Candidate B (depthwise 3x3 mixer with an equal-parameter 1x1 control) started training at ~11:22 IDT.\r\nSurvivor rule (pre-registered): >=5% better paired FID-10K in raw AND EMA at 50k, or +0.02 recall without FID loss, with serial calls unchanged and <=10% per-call latency growth.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-14.jpg"
+  },
+  {
+   "n": 15,
+   "title": "What is the actual paper contribution?",
+   "kicker": "FOR DISCUSSION",
+   "notes": "Purpose: invite a decision, not applause.\r\nStrongest claim we can defend today: on FFHQ-64, with the backbone held fixed, explicit causal frequency generation beats joint generation at equal compute, and the reverse order is catastrophic - so the order is not arbitrary for this model. Practically, A1 matches DCTdiff to within 9% FID with a quarter of the parameters.\r\nMain threat: FAR (Yu et al. 2025) already does next-frequency AR with a diffusion head on continuous tokens; GDM sequentially diffuses frequency groups; Nash et al. did low-to-high DCT AR. Our distinctions are real but are design combinations.\r\nMissing: anything that beats optimized DCTdiff on training or latency, a written-up mechanism for why order matters, a second dataset/resolution, and the diffusion-free head.\r\nQuestions for Shai: (1) is frequency causality a distinct inductive bias or just a schedule; (2) what is the simplest stochastic field generator that keeps diversity; (3) which single experiment would make the work both competitive and differentiated.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-15.jpg"
+  },
+  {
+   "n": 16,
+   "title": "Technical appendix",
+   "kicker": "APPENDIX",
+   "notes": "Reference material for questions. Every slide carries its source file.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-16.jpg"
+  },
+  {
+   "n": 17,
+   "title": "DCT packing: 54 channels, 4 radial groups",
+   "kicker": "A1  ·  REPRESENTATION",
+   "notes": "Exact packing from the code. The zig-zag truncation at 9 coefficients means G3 contains (0,3),(1,2),(2,1) but not (3,0); this asymmetry is inherited from DCTdiff and is the reason the F2 coefficient-plane order needs an explicit tie-break convention.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-17.jpg"
+  },
+  {
+   "n": 18,
+   "title": "Attention masks and causality checks",
+   "kicker": "A2  ·  CAUSALITY",
+   "notes": "The mask shown is generated by the same rule as libs/axial_freq.slot_mask. The verification JSON stores the actual mask used in a traced forward, and the Jacobian tests are numerical, not by construction.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-18.jpg"
+  },
+  {
+   "n": 19,
+   "title": "Samplers: equations and evaluation accounting",
+   "kicker": "A3  ·  SAMPLERS & NFE ACCOUNTING",
+   "notes": "Solver curves: UniPC beats DPM-Solver++(2M) and Euler for A1 at every budget; A1 FID rises with more uniform calls (UniPC-10 better than UniPC-50), i.e. a mildly over-dispersed fine solve trades precision for recall. R0 is flat from 15 calls on. The allocation figure is the evidence for giving G0 the most calls.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-19.jpg"
+  },
+  {
+   "n": 20,
+   "title": "Evaluation protocol: q90 reference, FID-10K vs 50K",
+   "kicker": "A4  ·  EVALUATION",
+   "notes": "If asked why q90: the BandJoint campaign trained on q90-decoded images, and to compare against its 21.32 winner we kept its protocol. The official-reference FID is reported separately because it includes the codec floor.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-20.jpg"
+  },
+  {
+   "n": 21,
+   "title": "Early architectures we abandoned",
+   "kicker": "A5  ·  HISTORY",
+   "notes": "These are kept for completeness; none produced a model we compare against. The spatial-causal run was a specification error (wrong axis); the others were correct but either too costly or confounded by capacity.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-21.jpg"
+  },
+  {
+   "n": 22,
+   "title": "Training throughput and FLOP accounting",
+   "kicker": "A6  ·  COST",
+   "notes": "FLOPs come from torch FlopCounterMode (matmul/conv/attention, forward+backward; elementwise ops not counted). The CIFAR profile showed the same pattern: A1 at D192 used 0.72x R0 FLOPs but 1.55x GEMM time because 192-wide matmuls underuse tensor cores.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-22.jpg"
+  },
+  {
+   "n": 23,
+   "title": "The single-token tail artifact",
+   "kicker": "A7  ·  ROBUSTNESS",
+   "notes": "The three rows of tiles are the three worst FFHQ UniPC samples by max |coef|/data-max, decoded cumulatively: the artifact is absent until G3 is added. On CIFAR the diagnosis was done by noise/prefix swaps at a fixed token.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-23.jpg"
+  },
+  {
+   "n": 24,
+   "title": "Full screen table (raw numbers)",
+   "kicker": "A8  ·  ALL SCREENS",
+   "notes": "Raw numbers behind slides 6 and 11. CIFAR FIDs and FFHQ FIDs are on different scales and must not be compared across the two blocks.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-24.jpg"
+  },
+  {
+   "n": 25,
+   "title": "Same initial noise, different samplers and models",
+   "kicker": "A9  ·  SAME NOISE",
+   "notes": "All rows share the same initial noise tensor for each column (generator 20261017, shard 0). This is a qualitative cross-check of the quantitative claims: UniPC is the same model with a better solve; R0 and A0, both joint ODEs, learn nearly the same noise-to-image map.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-25.jpg"
+  },
+  {
+   "n": 26,
+   "title": "Bibliography",
+   "kicker": "A10  ·  REFERENCES (VERIFIED 19 OCT 2026)",
+   "notes": "Every entry was opened on arXiv (abstract page) on 19 Oct 2026; venue info from CVF/PMLR/ECVA where listed. FAR appears twice in the literature under the same acronym (Yu et al. frequency AR; Hang et al. fast AR) - they are different papers.",
+   "img": "decks/next-frequency-2026-10-19/slides/slide-26.jpg"
+  }
+ ]
+}

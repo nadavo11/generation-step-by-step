@@ -1,20 +1,35 @@
 # Generation research site
 
 Astro static site published at <https://nadavo11.github.io/generation-step-by-step/>.
-It has two distinct reports:
 
-- `/projects/generation-step-by-step/`: a streaming trajectory audit. The
-  original report contributes 21 released-checkpoint strips and 17 DCTdiff/FAR
-  spectral series. An A1 FFHQ-64 strip, figure, and spectral series are added
-  in the same views, with their separate source labeled.
-- `/projects/next-frequency/`: the A1 method, saved FFHQ-64 sample explorer and
-  matched-compute metrics, plus the separate CIFAR-10 D192 matched-100k STRONG
-  verdict and seeds 5/7 G2 artifact caveat.
+| Page | What |
+|---|---|
+| `/` | Landing page: the two projects as cards and a dated update log (`src/data/site.ts`) |
+| `/projects/next-frequency/` | Our A1 method: FFHQ-64 results against DCTdiff (R0) and the joint control (A0), the UniPC sampler, the 146k stage explorer, CIFAR-10, limits and next experiments |
+| `/projects/next-frequency/deck/` | Lab deck of 19 Oct 2026: slide viewer with speaker notes, PDF / PPTX / one-slide summary downloads |
+| `/projects/generation-step-by-step/` | Streaming trajectory audit of 21 released checkpoints, with A1 in the same views |
+| `/report/` | The archived original audit report |
 
-The two experiments use different models and comparison protocols. The
-CIFAR-10 exact FIDs and G2 artifact images were not supplied, so they are not
-fabricated. The FFHQ-64 A1 run is marked crashed after saving its 146k
-assessment; no later result is claimed.
+Header navigation and the footer site map come from `src/data/site.ts` and
+`src/layouts/Base.astro`; the next-frequency pages share a breadcrumb and tab bar
+(`src/components/ProjectTabs.astro`).
+
+The two projects use different models and comparison protocols. Next-frequency
+numbers are as of 19 Oct 2026 and come from the campaign’s result files in
+`learned-spectral-basis/reports/dct_causal/`; the deck’s `PROVENANCE.md` lists
+the file behind each figure.
+
+## Adding a deck
+
+Build the deck and its viewer images in `learned-spectral-basis/reports/shai_deck`
+(`src/build_deck.js`, then `src/build_page.py build page`), then run
+
+```bash
+python scripts/import_deck.py /path/to/learned-spectral-basis/reports/shai_deck
+```
+
+It copies slides, PDF, PPTX and figures into `public/decks/<id>/` and writes
+`src/data/deck-<date>.json` (titles, kickers, speaker notes) for `DeckViewer`.
 
 ## Local development
 

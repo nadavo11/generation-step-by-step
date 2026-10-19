@@ -1,0 +1,78 @@
+---
+// Slide-by-slide viewer for a deck imported by scripts/import_deck.py. Renders slide 1 statically; the script adds
+// previous / next, arrow keys, the slide list and #slide-N deep links.
+import { withBase } from '../utils/paths';
+interface Slide { n: number; title: string; kicker: string; notes: string; img: string; }
+interface Props { slides: Slide[]; mainSlides: number; }
+const { slides, mainSlides } = Astro.props;
+const first = slides[0];
+const payload = slides.map((s) => ({ ...s, img: withBase(s.img) }));
+---
+<div class="deck-viewer" data-deck={JSON.stringify(payload)} data-main={mainSlides}>
+  <div class="deck-stage">
+    <div class="deck-frame"><img data-deck-img src={withBase(first.img)} alt={`Slide 1: ${first.title}`} width="1600" height="900" fetchpriority="high" /></div>
+    <div class="deck-controls">
+      <button type="button" class="instrument-button" data-deck-prev disabled>← Previous</button>
+      <button type="button" class="instrument-button" data-deck-next>Next →</button>
+      <span class="deck-count" data-deck-count>1 / {slides.length}</span>
+      <span class="deck-hint">Arrow keys work too</span>
+    </div>
+    <div class="deck-caption">
+      <span data-deck-kicker>{first.kicker}</span>
+      <h2 data-deck-title>{first.title}</h2>
+    </div>
+    <details class="deck-notes" open>
+      <summary>Speaker notes</summary>
+      <p data-deck-notes>{first.notes}</p>
+    </details>
+  </div>
+  <nav class="deck-list" aria-label="Slides">
+    {slides.map((s, i) => (
+      <>
+        {i === 0 && <span class="deck-list-head">Main deck</span>}
+        {i === mainSlides && <span class="deck-list-head">Appendix</span>}
+        <a href={`#slide-${s.n}`} data-deck-go={i} aria-current={i === 0 ? 'true' : undefined}><span>{String(s.n).padStart(2, '0')}</span>{s.title}</a>
+      </>
+    ))}
+  </nav>
+</div>
+<script>
+  interface Slide { n: number; title: string; kicker: string; notes: string; img: string; }
+  const root = document.querySelector<HTMLElement>('.deck-viewer');
+  if (root) {
+    const slides: Slide[] = JSON.parse(root.dataset.deck ?? '[]');
+    const q = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const img = q<HTMLImageElement>('[data-deck-img]');
+    const prev = q<HTMLButtonElement>('[data-deck-prev]');
+    const next = q<HTMLButtonElement>('[data-deck-next]');
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-deck-go]'));
+    let cur = 0;
+    const show = (i: number, push = true) => {
+      cur = Math.max(0, Math.min(slides.length - 1, i));
+      const s = slides[cur];
+      img.src = s.img;
+      img.alt = `Slide ${s.n}: ${s.title}`;
+      q('[data-deck-kicker]').textContent = s.kicker;
+      q('[data-deck-title]').textContent = s.title;
+      q('[data-deck-notes]').textContent = s.notes || 'No notes on this slide.';
+      q('[data-deck-count]').textContent = `${s.n} / ${slides.length}`;
+      prev.disabled = cur === 0;
+      next.disabled = cur === slides.length - 1;
+      links.forEach((a, j) => (j === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+      links[cur]?.scrollIntoView({ block: 'nearest' });
+      if (push) history.replaceState(null, '', `#slide-${s.n}`);
+      if (cur + 1 < slides.length) new Image().src = slides[cur + 1].img;
+    };
+    prev.addEventListener('click', () => show(cur - 1));
+    next.addEventListener('click', () => show(cur + 1));
+    links.forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); show(Number(a.dataset.deckGo)); img.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }));
+    document.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('input, textarea, select, summary')) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); show(cur + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(cur - 1); }
+    });
+    const m = /^#slide-(\d+)$/.exec(location.hash);
+    if (m) show(Number(m[1]) - 1, false);
+  }
+</script>
