@@ -65,3 +65,12 @@ The panels differ in dataset, resolution, and total compute. The A1 report's
 channel diagram uses the documented 6/12/18/18 grouping, and its frequency
 heatmap reads the derived `spectral.json` values. Playback in both views
 starts only when clicked.
+
+The streaming PSNR instrument reads `public/streaming/psnr.json`. Regenerate it
+with `python scripts/build_streaming_psnr.py --results /path/to/prior_intermediates/results`.
+It converts the archived public-run median RGB RMSE arrays to PSNR and measures
+the four A1 stages from the native 64px saved PNG. Source SHA-256 hashes travel
+with each row. The graph facets by native resolution; its horizontal coordinate
+is each run's fraction of calls/stages, **not elapsed seconds**. The archive has
+only total batch wall time for DCTdiff/FAR and no per-stage wall times, so these
+curves do not establish a latency ranking or cross-dataset streaming superiority.
