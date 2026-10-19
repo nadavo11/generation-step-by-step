@@ -8,13 +8,15 @@ import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
 import { withBase } from '../utils/paths';
+import { primaryNav, type Section } from '../data/site';
 
 interface Props {
   title: string;
   description: string;
+  section?: Section;
 }
 
-const { title, description } = Astro.props;
+const { title, description, section = 'home' } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -33,14 +35,22 @@ const { title, description } = Astro.props;
       <div class="shell header-inner">
         <a class="wordmark" href={withBase('')} aria-label="Research projects home"><span class="wordmark-glyph" aria-hidden="true">∿</span> Generation studies</a>
         <nav aria-label="Primary navigation">
-          <a href={withBase('projects/generation-step-by-step/')}>Streaming audit</a>
-          <a href={withBase('projects/next-frequency/')}>Our method</a>
-          <a href={withBase('report/')}>Source report</a>
+          {primaryNav.map((item) => (
+            <a href={withBase(item.href)} aria-current={item.section === section ? 'page' : undefined} data-nav={item.section}>{item.label}</a>
+          ))}
         </nav>
       </div>
     </header>
     <main id="main"><slot /></main>
-    <footer class="site-footer"><div class="shell footer-inner"><span>Generation studies</span><span>Evidence, limits, next questions.</span><a href={withBase('report/')}>Read the source report</a></div></footer>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <div class="footer-brand"><a href={withBase('')}>Generation studies</a><span>Evidence, limits, next questions.</span></div>
+        <nav class="footer-map" aria-label="Site map">
+          <div><span>Next-frequency (ours)</span><a href={withBase('projects/next-frequency/')}>Overview and results</a><a href={withBase('projects/next-frequency/deck/')}>Lab deck · 19 Oct 2026</a><a href={withBase('ours/ffhq64-a1-d256/source.json')}>Source manifest</a></div>
+          <div><span>Streaming audit</span><a href={withBase('projects/generation-step-by-step/')}>Trajectory report</a><a href={withBase('report/')}>Original source report</a></div>
+        </nav>
+      </div>
+    </footer>
     <script>
       const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
       let ticking = false;

@@ -1,0 +1,21 @@
+---
+// Breadcrumb + tab bar shared by the next-frequency pages.
+import { withBase } from '../utils/paths';
+interface Props { active: 'overview' | 'deck'; }
+const { active } = Astro.props;
+const tabs = [
+  { id: 'overview', label: 'Overview and results', href: 'projects/next-frequency/' },
+  { id: 'deck', label: 'Lab deck · 19 Oct 2026', href: 'projects/next-frequency/deck/' },
+];
+---
+<div class="project-bar shell">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href={withBase('')}>Home</a><span aria-hidden="true">/</span>
+    {active === 'overview' ? <span aria-current="page">Next-frequency generation</span> : <a href={withBase('projects/next-frequency/')}>Next-frequency generation</a>}
+    {active === 'deck' && <><span aria-hidden="true">/</span><span aria-current="page">Lab deck</span></>}
+  </nav>
+  <nav class="project-tabs" aria-label="Next-frequency pages">
+    {tabs.map((tab) => <a href={withBase(tab.href)} aria-current={tab.id === active ? 'page' : undefined}>{tab.label}</a>)}
+    <a class="project-tabs-aside" href={withBase('projects/generation-step-by-step/#instruments')}>A1 in the streaming audit ↗</a>
+  </nav>
+</div>

@@ -1,0 +1,27 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import ProjectTabs from '../../../../components/ProjectTabs.astro';
+import DeckViewer from '../../../../components/DeckViewer.astro';
+import deck from '../../../../data/deck-2026-10-19.json';
+import { withBase } from '../../../../utils/paths';
+const mb = (b: number) => (b / 1048576).toFixed(1) + ' MB';
+---
+<Base title="Lab deck, 19 Oct 2026 | Next-frequency generation" description="Frequency-autoregressive image generation: what have we learned? Slides with speaker notes, PDF and PowerPoint." section="deck">
+  <ProjectTabs active="deck" />
+  <article class="deck-page shell">
+    <header class="deck-head">
+      <div>
+        <p class="section-overline">{deck.occasion} · 19 Oct 2026</p>
+        <h1>What have we learned?</h1>
+        <p class="deck-lede">The state of frequency-autoregressive generation on FFHQ-64 and CIFAR-10: the architecture, matched comparisons, the UniPC sampler, where the model fails, prior art and the next experiments. {deck.mainSlides} slides plus a technical appendix.</p>
+      </div>
+      <div class="deck-downloads" aria-label="Downloads">
+        <a class="deck-download primary" href={withBase(deck.files.pdf.path)} download>Slides, PDF <small>{mb(deck.files.pdf.bytes)}</small></a>
+        <a class="deck-download" href={withBase(deck.files.pptx.path)} download>Editable PowerPoint <small>{mb(deck.files.pptx.bytes)}</small></a>
+        <a class="deck-download" href={withBase(deck.files.summary.path)} download>One-slide summary, PDF <small>{mb(deck.files.summary.bytes)}</small></a>
+      </div>
+    </header>
+    <DeckViewer slides={deck.slides} mainSlides={deck.mainSlides} />
+    <p class="deck-foot">Every number comes from the campaign’s own result files: FFHQ64-q90 reference with the EDM Inception detector, FID-50K for decisive comparisons. FID-10K and FID-50K, Euler and UniPC samplers, and CIFAR-10 and FFHQ-64 results are labelled and never mixed. Run status is as of 11:35 Israel time on 19 Oct 2026. The <a href={withBase('projects/next-frequency/')}>overview page</a> summarises the same results.</p>
+  </article>
+</Base>

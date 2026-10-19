@@ -20,7 +20,7 @@ interface Props { project: Project; }
 const { project } = Astro.props;
 const heroFigure = project.figures.find((figure) => figure.src.includes('ffhq128_mid_x0'))!;
 ---
-<Base title={project.title + ' | Research projects'} description={project.contribution}>
+<Base title={project.title + ' | Generation studies'} description={project.contribution} section="audit">
   <article>
     <header class="project-hero shell">
       <div class="hero-meta"><span>Streaming trajectory report</span><span>Image generation · decoded intermediate states</span></div>
